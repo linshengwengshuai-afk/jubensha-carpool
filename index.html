@@ -1,1 +1,44 @@
-PLACEHOLDER_WILL_BE_REPLACED
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>剧本杀拼车助手</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>body{background:#0b0c12;color:#f0f0f5;font-family:sans-serif;padding:20px;} .btn{background:#e5a93c;color:#000;border:none;padding:10px 20px;border-radius:20px;cursor:pointer;} .card{background:rgba(24,25,36,0.75);border:1px solid rgba(229,169,60,0.2);border-radius:12px;padding:16px;margin:10px 0;}</style>
+</head>
+<body>
+<h1>剧本杀拼车助手</h1>
+<p>成品演示版（用户系统）</p>
+<button class="btn" onclick="openAuth()">登录 / 注册</button>
+<div id="status"></div>
+<div id="list"></div>
+<script>
+const SUPABASE_URL = 'https://mfdeckoqqyvihvwzukus.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGVja29xcXl2aWh2d3p1a3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Nzc2NzQsImV4cCI6MjEwMzE1MzY3NH0.MDVvtjnq99N294og4lvH2oFCHuif8pdHIEMr4EYwl9Q';
+let db, user;
+async function init() {
+  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const {data} = await db.auth.getSession();
+  user = data.session?.user;
+  document.getElementById('status').innerText = user ? '已登录: ' + user.email : '未登录';
+  load();
+}
+function openAuth() {
+  const email = prompt('邮箱');
+  const pass = prompt('密码');
+  if (!email) return;
+  db.auth.signInWithPassword({email, password: pass}).then(({error}) => {
+    if (error) alert(error.message);
+    else location.reload();
+  });
+}
+async function load() {
+  const {data} = await db.from('carpools').select('*').limit(20);
+  const el = document.getElementById('list');
+  el.innerHTML = (data||[]).map(c => '<div class="card"><b>《' + (c.script_name||'') + '》</b><br>' + (c.location||'') + ' ' + (c.game_time||'') + '</div>').join('') || '暂无数据';
+}
+init();
+</script>
+</body>
+</html>
