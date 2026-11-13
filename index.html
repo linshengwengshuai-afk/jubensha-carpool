@@ -6,65 +6,55 @@
 <title>剧本杀拼车助手</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--bg:#0b0c12;--card:rgba(24,25,36,.8);--border:rgba(229,169,60,.25);--gold:#e5a93c;--gold-l:#ffd580;--text:#f0f0f5;--sub:#9ca3af;--danger:#ef4444}
+:root{--bg:#0b0c12;--card:rgba(24,25,36,.8);--border:rgba(229,169,60,.25);--gold:#e5a93c;--gold-l:#ffd580;--text:#f0f0f5;--sub:#9ca3af}
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}
 body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgba(229,169,60,.08) 0%,transparent 40%),radial-gradient(circle at 85% 85%,rgba(139,92,246,.08) 0%,transparent 40%);min-height:100vh;color:var(--text);display:flex;flex-direction:column;align-items:center}
-.wechat-tip{width:100%;background:rgba(229,169,60,.12);border-bottom:1px solid rgba(229,169,60,.3);color:var(--gold-l);font-size:12px;padding:8px 16px;text-align:center;display:none}
 .header{width:100%;background:rgba(18,19,28,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
-.header-inner{max-width:1100px;margin:0 auto;min-height:60px;display:flex;justify-content:space-between;align-items:center;padding:8px 16px;gap:10px;flex-wrap:wrap}
-.logo{display:flex;align-items:center;gap:8px;cursor:pointer}
+.header-inner{max-width:1100px;margin:0 auto;min-height:56px;display:flex;justify-content:space-between;align-items:center;padding:8px 14px;gap:8px;flex-wrap:wrap}
 .logo-title{font-size:16px;font-weight:900;background:linear-gradient(90deg,#fff,#ffd580,#e5a93c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .logo-sub{font-size:9px;color:#9ca3af;letter-spacing:1px;font-family:monospace}
 .nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.nav-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--sub);padding:6px 12px;border-radius:18px;font-size:12px;font-weight:600;cursor:pointer}
+.nav-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--sub);padding:6px 12px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer}
 .nav-btn.active,.nav-btn:hover{background:linear-gradient(135deg,rgba(229,169,60,.2),rgba(229,169,60,.05));border-color:var(--gold);color:var(--gold-l)}
-.user-btn{background:rgba(229,169,60,.15);border:1px solid var(--gold);color:var(--gold-l);padding:6px 12px;border-radius:18px;font-size:12px;cursor:pointer}
-.main{width:100%;max-width:1100px;padding:16px;flex:1}
-.announce{background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(229,169,60,.08));border:1px solid rgba(239,68,68,.35);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13px}
-.search{width:100%;height:40px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:0 16px;color:#fff;margin-bottom:10px}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.chip{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--sub);font-size:11px;padding:4px 12px;border-radius:14px;cursor:pointer}
+.user-tag{background:rgba(229,169,60,.15);border:1px solid var(--gold);color:var(--gold-l);padding:5px 10px;border-radius:16px;font-size:12px}
+.main{width:100%;max-width:1100px;padding:14px;flex:1}
+.announce{background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(229,169,60,.08));border:1px solid rgba(239,68,68,.35);border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px}
+.search{width:100%;height:38px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.12);border-radius:19px;padding:0 14px;color:#fff;margin-bottom:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--sub);font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer}
 .chip.active{background:rgba(229,169,60,.2);border-color:var(--gold);color:var(--gold-l)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;transition:.25s}
-.card:hover{transform:translateY(-3px);border-color:rgba(229,169,60,.5)}
-.title{font-size:17px;font-weight:700;margin-bottom:6px}
-.meta{font-size:12px;color:var(--sub);line-height:1.7;margin-bottom:8px}
-.badge{font-size:11px;padding:2px 8px;border-radius:10px;margin-left:6px}
-.badge-need{background:rgba(239,68,68,.15);color:#ff7675}
-.badge-full{background:rgba(255,255,255,.06);color:var(--sub)}
-.badge-mine{background:rgba(229,169,60,.2);color:var(--gold-l);border:1px solid var(--gold)}
-.btn{background:linear-gradient(135deg,#e5a93c,#d97706);color:#0b0c10;border:none;padding:6px 14px;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer}
-.btn-ghost{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--sub);padding:6px 12px;border-radius:14px;font-size:12px;cursor:pointer}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
-.modal-card{background:#191a26;border:1px solid var(--border);border-radius:18px;padding:22px;width:100%;max-width:360px}
-.modal h3{color:var(--gold-l);margin-bottom:12px;font-size:16px}
-.form-group{margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+.title{font-size:16px;font-weight:700;margin-bottom:6px}
+.meta{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:8px}
+.btn{background:linear-gradient(135deg,#e5a93c,#d97706);color:#0b0c10;border:none;padding:6px 12px;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal-card{background:#191a26;border:1px solid var(--border);border-radius:16px;padding:20px;width:100%;max-width:340px}
+.form-group{margin-bottom:10px}
 .form-group label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
-.form-group input{width:100%;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);color:#fff;height:40px;border-radius:8px;padding:0 12px;font-size:14px}
-.tip{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.5}
-@media(max-width:700px){.header-inner{flex-direction:column;align-items:stretch}.nav{justify-content:center}.grid{grid-template-columns:1fr}}
+.form-group input{width:100%;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);color:#fff;height:38px;border-radius:8px;padding:0 10px}
+@media(max-width:700px){.header-inner{flex-direction:column}.nav{justify-content:center}.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="wechat-tip" id="wechatTip">微信内打开 · 点击右上角 <b>···</b> → 在浏览器中打开体验更好</div>
 <header class="header">
   <div class="header-inner">
-    <div class="logo" onclick="switchTab('square')">
-      <div><div class="logo-title">剧本杀拼车助手</div><div class="logo-sub">BOMBER SQUAD</div></div>
+    <div onclick="switchTab('square')" style="cursor:pointer">
+      <div class="logo-title">剧本杀拼车助手</div>
+      <div class="logo-sub">微信直接用 · 不用登录</div>
     </div>
     <nav class="nav">
       <button class="nav-btn active" id="tabSquare" onclick="switchTab('square')">拼车广场</button>
       <button class="nav-btn" id="tabMy" onclick="switchTab('my')">我的拼车</button>
       <button class="nav-btn" id="tabPub" onclick="switchTab('pub')">发起拼车</button>
-      <button class="user-btn" id="userBtn" onclick="openAuth()">登录</button>
+      <span class="user-tag" id="userTag" onclick="setNickname()">设置昵称</span>
     </nav>
   </div>
 </header>
 <main class="main">
   <section id="pageSquare">
-    <div class="announce"><b>组局公约</b> · 硬核推理 / 恐怖 / 机制 / 欢乐 · 严禁情感沉浸本</div>
-    <input class="search" id="searchInput" placeholder="搜索剧本、地点、发起人..." oninput="renderSquare()">
+    <div class="announce"><b>组局公约</b> · 硬核推理 / 恐怖 / 机制 / 欢乐 · 严禁情感本</div>
+    <input class="search" id="searchInput" placeholder="搜索剧本、地点..." oninput="renderSquare()">
     <div class="chips">
       <span class="chip active" onclick="setTag('全部',this)">全部</span>
       <span class="chip" onclick="setTag('推理',this)">推理</span>
@@ -74,93 +64,63 @@ body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgb
     </div>
     <div class="grid" id="squareList"></div>
   </section>
-  <section id="pageMy" style="display:none">
-    <div class="grid" id="myList"></div>
-  </section>
+  <section id="pageMy" style="display:none"><div class="grid" id="myList"></div></section>
   <section id="pagePub" style="display:none">
-    <div class="card" style="max-width:480px;margin:0 auto">
-      <h3 style="color:var(--gold-l);margin-bottom:12px">发起拼车</h3>
+    <div class="card" style="max-width:460px;margin:0 auto">
+      <h3 style="color:var(--gold-l);margin-bottom:10px">发起拼车</h3>
       <form id="pubForm">
         <div class="form-group"><label>剧本名称 *</label><input id="fName" required></div>
         <div class="form-group"><label>开局时间 *</label><input id="fTime" required placeholder="如 11月15日 14:00"></div>
         <div class="form-group"><label>地点 *</label><input id="fLoc" required></div>
-        <div style="display:flex;gap:10px">
+        <div style="display:flex;gap:8px">
           <div class="form-group" style="flex:1"><label>总人数 *</label><input id="fTotal" type="number" required></div>
           <div class="form-group" style="flex:1"><label>当前人数 *</label><input id="fCur" type="number" required></div>
         </div>
-        <div class="form-group"><label>人均费用</label><input id="fPrice" placeholder="如 98 或 AA"></div>
-        <div class="form-group"><label>你的昵称</label><input id="fHost" placeholder="不填则用邮箱前缀"></div>
-        <div class="form-group"><label>联系方式</label><input id="fContact" placeholder="微信/手机（选填）"></div>
+        <div class="form-group"><label>人均费用</label><input id="fPrice" placeholder="98 或 AA"></div>
+        <div class="form-group"><label>联系方式</label><input id="fContact" placeholder="微信（选填）"></div>
         <div class="form-group"><label>标签</label><input id="fTags" placeholder="推理 硬核"></div>
-        <button class="btn" style="width:100%;height:40px" type="submit">发布到广场</button>
+        <button class="btn" style="width:100%;height:38px" type="submit">发布</button>
       </form>
     </div>
   </section>
 </main>
 
-<div id="authModal" class="modal" style="display:none">
+<div id="nickModal" class="modal" style="display:none">
   <div class="modal-card">
-    <h3 id="authTitle">免密登录</h3>
-    <p class="tip" style="margin-bottom:12px">只需邮箱，点邮件里的链接即可登录，不用记密码。</p>
-    <form id="authForm">
-      <div class="form-group"><label>邮箱</label><input type="email" id="authEmail" required placeholder="you@example.com"></div>
-      <button class="btn" style="width:100%;height:40px" type="submit" id="authBtn">发送登录链接</button>
-    </form>
-    <div class="tip" id="authTip"></div>
-    <button class="btn-ghost" style="width:100%;margin-top:12px" onclick="closeAuth()">取消</button>
+    <h3 style="color:var(--gold-l);margin-bottom:10px">设置你的昵称</h3>
+    <p style="font-size:12px;color:var(--sub);margin-bottom:10px">微信里直接用，不用登录、不用收邮件。</p>
+    <input id="nickInput" placeholder="例如：侦探小李" style="width:100%;height:38px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);color:#fff;border-radius:8px;padding:0 10px;margin-bottom:12px">
+    <button class="btn" style="width:100%" onclick="saveNick()">确定</button>
   </div>
 </div>
 
 <script>
 const SUPABASE_URL = 'https://mfdeckoqqyvihvwzukus.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGVja29xcXl2aWh2d3p1a3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Nzc2NzQsImV4cCI6MjEwMzE1MzY3NH0.MDVvtjnq99N294og4lvH2oFCHuif8pdHIEMr4EYwl9Q';
-let db, user = null, cars = [], tag = '全部';
+let db, cars = [], tag = '全部', myNick = localStorage.getItem('myNick') || '';
+let myCarIds = JSON.parse(localStorage.getItem('myCarIds') || '[]');
 
-if (/MicroMessenger/i.test(navigator.userAgent)) document.getElementById('wechatTip').style.display = 'block';
-
-function openAuth() { document.getElementById('authModal').style.display = 'flex'; }
-function closeAuth() { document.getElementById('authModal').style.display = 'none'; }
+function setNickname() {
+  document.getElementById('nickInput').value = myNick;
+  document.getElementById('nickModal').style.display = 'flex';
+}
+function saveNick() {
+  myNick = document.getElementById('nickInput').value.trim() || '匿名玩家';
+  localStorage.setItem('myNick', myNick);
+  document.getElementById('userTag').innerText = myNick;
+  document.getElementById('nickModal').style.display = 'none';
+}
 
 async function init() {
-  if (!window.supabase) return alert('SDK 加载失败');
-  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  const { data: { session } } = await db.auth.getSession();
-  if (session) user = session.user;
-  db.auth.onAuthStateChange((_, s) => { user = s?.user || null; updateUI(); loadCars(); });
-  updateUI();
+  if (window.supabase) db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  if (!myNick) setNickname();
+  else document.getElementById('userTag').innerText = myNick;
   loadCars();
 }
 
-function updateUI() {
-  const btn = document.getElementById('userBtn');
-  if (user) {
-    const name = user.user_metadata?.nickname || user.email?.split('@')[0] || '玩家';
-    btn.innerText = name + ' · 退出';
-    btn.onclick = async () => { await db.auth.signOut(); };
-  } else {
-    btn.innerText = '登录';
-    btn.onclick = openAuth;
-  }
-}
-
-document.getElementById('authForm').onsubmit = async e => {
-  e.preventDefault();
-  const email = document.getElementById('authEmail').value.trim();
-  const btn = document.getElementById('authBtn');
-  btn.disabled = true; btn.innerText = '发送中...';
-  const { error } = await db.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.href.split('?')[0] }
-  });
-  btn.disabled = false; btn.innerText = '发送登录链接';
-  if (error) return document.getElementById('authTip').innerText = '发送失败：' + error.message;
-  document.getElementById('authTip').innerHTML = '✅ 登录链接已发送到邮箱<br>请打开邮件点击链接（可关闭此窗口）';
-};
-
 async function loadCars() {
   if (!db) return;
-  const { data, error } = await db.from('carpools').select('*').order('id', { ascending: false });
-  if (error) { console.error(error); return; }
+  const { data } = await db.from('carpools').select('*').order('id', { ascending: false });
   cars = data || [];
   renderSquare();
   renderMy();
@@ -169,26 +129,22 @@ async function loadCars() {
 function renderSquare() {
   const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
   const list = cars.filter(c => {
-    const t = (c.script_name||'') + (c.location||'') + (c.host||'') + (c.tags||[]).join(' ');
+    const t = (c.script_name||'') + (c.location||'') + (c.host||'');
     return (!q || t.toLowerCase().includes(q)) && (tag === '全部' || (c.tags||[]).some(x => x.includes(tag)));
   });
   const el = document.getElementById('squareList');
   el.innerHTML = list.length ? '' : '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">暂无拼车</div>';
   list.forEach(c => {
     const diff = (c.total_count||0) - (c.current_count||0);
-    const isMine = user && c.creator_id === user.id;
+    const isMine = myCarIds.includes(c.id);
     const div = document.createElement('div');
     div.className = 'card';
     div.innerHTML = `
-      <div class="title">《${c.script_name||'未命名'}》 ${isMine ? '<span class="badge badge-mine">我的</span>' : ''}</div>
-      <div class="meta">
-        📅 ${c.game_time||'-'}<br>
-        📍 ${c.location||'-'} ${c.price ? ' · ￥'+c.price : ''}<br>
-        👤 ${c.host||'车头'}
-      </div>
+      <div class="title">《${c.script_name||'未命名'}》 ${isMine ? '<span style="color:#e5a93c;font-size:11px">我的</span>' : ''}</div>
+      <div class="meta">📅 ${c.game_time||'-'}<br>📍 ${c.location||'-'} ${c.price ? ' · ￥'+c.price : ''}<br>👤 ${c.host||'车头'}</div>
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span style="color:var(--gold);font-weight:700">${c.current_count||0}/${c.total_count||0}</span>
-        ${!isMine && diff > 0 ? '<button class="btn" onclick="join('+c.id+')">上车</button>' : (diff<=0 ? '<span class="badge badge-full">已满</span>' : '')}
+        ${diff > 0 && !isMine ? '<button class="btn" onclick="join('+c.id+')">上车</button>' : (diff<=0 ? '<span style="font-size:11px;color:#9ca3af">已满</span>' : '')}
       </div>
     `;
     el.appendChild(div);
@@ -197,20 +153,25 @@ function renderSquare() {
 
 function renderMy() {
   const el = document.getElementById('myList');
-  if (!user) { el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">登录后查看我的拼车</div>'; return; }
-  const mine = cars.filter(c => c.creator_id === user.id);
-  el.innerHTML = mine.length ? '' : '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">还没有发起拼车</div>';
+  const mine = cars.filter(c => myCarIds.includes(c.id));
+  el.innerHTML = mine.length ? '' : '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">还没有发起或加入的拼车</div>';
   mine.forEach(c => {
     const div = document.createElement('div');
     div.className = 'card';
-    div.innerHTML = `<div class="title">《${c.script_name}》</div><div class="meta">${c.game_time} · ${c.location}</div><div>${c.current_count}/${c.total_count}</div>`;
+    div.innerHTML = `<div class="title">《${c.script_name}》</div><div class="meta">${c.game_time} · ${c.location}</div>`;
     el.appendChild(div);
   });
 }
 
 function join(id) {
-  if (!user) return openAuth();
-  alert('上车成功（完整乘客列表可后续扩展）');
+  if (!myNick) return setNickname();
+  if (!myCarIds.includes(id)) {
+    myCarIds.push(id);
+    localStorage.setItem('myCarIds', JSON.stringify(myCarIds));
+  }
+  alert('已上车！昵称：' + myNick);
+  renderSquare();
+  renderMy();
 }
 
 function setTag(t, el) {
@@ -230,10 +191,9 @@ function switchTab(name) {
 
 document.getElementById('pubForm').onsubmit = async e => {
   e.preventDefault();
-  if (!user) return openAuth();
+  if (!myNick) return setNickname();
   const name = document.getElementById('fName').value.trim();
-  const tags = document.getElementById('fTags').value.trim();
-  if (['情感','沉浸','哭哭','演绎','立意','还泪'].some(k => (name+tags).includes(k))) return alert('禁止发布情感类');
+  if (['情感','沉浸','哭哭','演绎','立意','还泪'].some(k => name.includes(k))) return alert('禁止发布情感类');
   const payload = {
     script_name: name,
     game_time: document.getElementById('fTime').value.trim(),
@@ -241,14 +201,17 @@ document.getElementById('pubForm').onsubmit = async e => {
     total_count: +document.getElementById('fTotal').value,
     current_count: +document.getElementById('fCur').value,
     price: document.getElementById('fPrice').value.trim(),
-    host: document.getElementById('fHost').value.trim() || (user.email||'').split('@')[0],
+    host: myNick,
     contact: document.getElementById('fContact').value.trim() || '车头未留',
-    tags: tags.split(/\s+/).filter(Boolean),
-    creator_id: user.id,
-    members: [{ name: document.getElementById('fHost').value.trim() || '车头', isHost: true }]
+    tags: document.getElementById('fTags').value.trim().split(/\s+/).filter(Boolean),
+    members: [{ name: myNick, isHost: true }]
   };
-  const { error } = await db.from('carpools').insert([payload]);
+  const { data, error } = await db.from('carpools').insert([payload]).select();
   if (error) return alert('发布失败：' + error.message);
+  if (data && data[0]) {
+    myCarIds.push(data[0].id);
+    localStorage.setItem('myCarIds', JSON.stringify(myCarIds));
+  }
   alert('发布成功！');
   document.getElementById('pubForm').reset();
   switchTab('my');
