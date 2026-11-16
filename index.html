@@ -8,29 +8,32 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --bg:#1c1f2b;
-  --card:#2a332a;
-  --text:#d8d8d8;
-  --sub:#7a7a7a;
-  --yellow:#d4a84b;
-  --mint:#7ec8b3;
-  --red:#c45c5c;
-  --line:#3a453a;
+  --bg:#1a1d28;
+  --card:#252d28;
+  --text:#e0e0e0;
+  --sub:#6a6a6a;
+  --yellow:#c9a050;
+  --mint:#6bb5a0;
+  --red:#b85c5c;
+  --line:#353d35;
 }
 *{box-sizing:border-box;margin:0;padding:0;font-family:"Press Start 2P",monospace;-webkit-tap-highlight-color:transparent;image-rendering:pixelated}
-body{background:var(--bg);color:var(--text);min-height:100vh;padding:16px 16px 80px;font-size:10px;line-height:1.6}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-.logo{font-size:11px;color:var(--yellow);display:flex;align-items:center;gap:6px}
-.user{background:var(--yellow);color:#1c1f2b;padding:5px 8px;border:2px solid #1a1a1a;font-size:7px;cursor:pointer}
-.actions{display:flex;gap:10px;margin-bottom:16px}
-.btn-big{flex:1;background:var(--yellow);color:#1c1f2b;border:2px solid #1a1a1a;padding:14px 6px;font-size:9px;font-family:inherit;cursor:pointer}
-.btn-big:active{opacity:.8}
-.chars{display:flex;justify-content:space-around;margin:12px 0 16px;opacity:.7}
-.char{width:32px;height:40px;image-rendering:pixelated}
+body{background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px 90px;font-size:10px;line-height:1.6}
+.hero{text-align:center;padding:20px 0 30px}
+.hero h1{font-size:16px;color:var(--yellow);margin-bottom:8px}
+.hero p{font-size:8px;color:var(--sub)}
+.chars{display:flex;justify-content:center;gap:40px;margin:20px 0}
+.char{width:40px;height:48px}
+.scroll-hint{text-align:center;font-size:7px;color:var(--sub);margin:30px 0 20px;animation:blink 1.5s infinite}
+@keyframes blink{50%{opacity:.3}}
+.mode-btns{display:flex;gap:12px;margin-bottom:20px}
+.mode-btn{flex:1;background:var(--card);border:2px solid var(--line);padding:20px 8px;font-size:10px;font-family:inherit;color:var(--text);cursor:pointer;text-align:center}
+.mode-btn:active{background:var(--yellow);color:#1a1d28}
+.mode-btn .icon{font-size:16px;display:block;margin-bottom:6px}
 .filters{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
 .filters::-webkit-scrollbar{display:none}
 .f{background:var(--card);border:2px solid var(--line);color:var(--sub);padding:5px 8px;font-size:7px;cursor:pointer;white-space:nowrap}
-.f.on{background:var(--mint);color:#1c1f2b;border-color:#1a1a1a}
+.f.on{background:var(--mint);color:#1a1d28;border-color:#1a1a1a}
 .search{width:100%;background:var(--card);border:2px solid var(--line);color:var(--text);padding:8px;font-size:9px;font-family:inherit;margin-bottom:12px;outline:none}
 .search:focus{border-color:var(--yellow)}
 .list{display:flex;flex-direction:column;gap:8px}
@@ -39,8 +42,9 @@ body{background:var(--bg);color:var(--text);min-height:100vh;padding:16px 16px 8
 .item-row{font-size:7px;color:var(--sub);margin-bottom:3px}
 .item-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
 .need{color:var(--red);font-size:7px}
-.btn{background:var(--yellow);color:#1c1f2b;border:2px solid #1a1a1a;padding:5px 8px;font-size:7px;font-family:inherit;cursor:pointer}
+.btn{background:var(--yellow);color:#1a1d28;border:2px solid #1a1a1a;padding:5px 8px;font-size:7px;font-family:inherit;cursor:pointer}
 .btn-o{background:transparent;border:2px solid var(--line);color:var(--sub);padding:5px 8px;font-size:7px;font-family:inherit;cursor:pointer}
+.user{position:absolute;top:16px;right:16px;background:var(--yellow);color:#1a1d28;padding:5px 8px;border:2px solid #1a1a1a;font-size:7px;cursor:pointer}
 .nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:2px solid #1a1a1a;display:flex;padding:8px 0}
 .nav button{flex:1;background:none;border:none;color:var(--sub);font-size:7px;font-family:inherit;padding:5px}
 .nav button.on{color:var(--yellow)}
@@ -53,27 +57,27 @@ body{background:var(--bg);color:var(--text);min-height:100vh;padding:16px 16px 8
 .row{display:flex;gap:8px}
 .row .field{flex:1}
 .empty{text-align:center;padding:32px;color:var(--sub);font-size:7px}
+#listSection{display:none}
 </style>
 </head>
 <body>
-<div class="top">
-  <div class="logo">\1f50d 拼车</div>
-  <span class="user" id="userTag" onclick="openAuth()">登录</span>
+<span class="user" id="userTag" onclick="openAuth()">登录</span>
+
+<div class="hero">
+  <h1>\1f50d 拼车</h1>
+  <p>往下滚选择模式</p>
 </div>
-<div class="actions">
-  <button class="btn-big" onclick="openPub()">发布线索</button>
-  <button class="btn-big" onclick="go('square')">加入拼车</button>
-</div>
+
 <div class="chars">
   <svg class="char" viewBox="0 0 16 20" xmlns="http://www.w3.org/2000/svg">
-    <rect x="5" y="0" width="6" height="2" fill="#d4a84b"/>
-    <rect x="4" y="2" width="8" height="2" fill="#e8d5a0"/>
+    <rect x="5" y="0" width="6" height="2" fill="#c9a050"/>
+    <rect x="4" y="2" width="8" height="2" fill="#e0d0a0"/>
     <rect x="5" y="4" width="2" height="2" fill="#1a1a1a"/>
     <rect x="9" y="4" width="2" height="2" fill="#1a1a1a"/>
-    <rect x="6" y="7" width="4" height="1" fill="#c45c5c"/>
-    <rect x="4" y="9" width="8" height="4" fill="#4a6a8a"/>
-    <rect x="3" y="13" width="3" height="3" fill="#4a6a8a"/>
-    <rect x="10" y="13" width="3" height="3" fill="#4a6a8a"/>
+    <rect x="6" y="7" width="4" height="1" fill="#b85c5c"/>
+    <rect x="4" y="9" width="8" height="4" fill="#4a6080"/>
+    <rect x="3" y="13" width="3" height="3" fill="#4a6080"/>
+    <rect x="10" y="13" width="3" height="3" fill="#4a6080"/>
     <rect x="5" y="16" width="2" height="4" fill="#3a3a3a"/>
     <rect x="9" y="16" width="2" height="4" fill="#3a3a3a"/>
   </svg>
@@ -81,8 +85,8 @@ body{background:var(--bg);color:var(--text);min-height:100vh;padding:16px 16px 8
     <rect x="6" y="0" width="4" height="2" fill="#2a2a2a"/>
     <rect x="5" y="2" width="6" height="2" fill="#3a3a3a"/>
     <rect x="4" y="4" width="8" height="2" fill="#1a1a1a"/>
-    <rect x="5" y="6" width="2" height="2" fill="#f0e8d8"/>
-    <rect x="9" y="6" width="2" height="2" fill="#f0e8d8"/>
+    <rect x="5" y="6" width="2" height="2" fill="#e8e0d0"/>
+    <rect x="9" y="6" width="2" height="2" fill="#e8e0d0"/>
     <rect x="6" y="8" width="4" height="1" fill="#1a1a1a"/>
     <rect x="5" y="10" width="6" height="3" fill="#2a2a2a"/>
     <rect x="4" y="13" width="2" height="3" fill="#2a2a2a"/>
@@ -91,15 +95,31 @@ body{background:var(--bg);color:var(--text);min-height:100vh;padding:16px 16px 8
     <rect x="9" y="16" width="2" height="4" fill="#1a1a1a"/>
   </svg>
 </div>
-<input class="search" id="searchInput" placeholder="搜索..." oninput="render()">
-<div class="filters">
-  <span class="f on" onclick="setF('全部',this)">全部</span>
-  <span class="f" onclick="setF('推理',this)">推理</span>
-  <span class="f" onclick="setF('恐怖',this)">恐怖</span>
-  <span class="f" onclick="setF('机制',this)">机制</span>
-  <span class="f" onclick="setF('欢乐',this)">欢乐</span>
+
+<div class="scroll-hint">↓ 继续往下</div>
+
+<div class="mode-btns">
+  <button class="mode-btn" onclick="showList('carpool')">
+    <span class="icon">\1f697</span>
+    拼车中心
+  </button>
+  <button class="mode-btn" onclick="showList('group')">
+    <span class="icon">\1f465</span>
+    组局
+  </button>
 </div>
-<div class="list" id="list"></div>
+
+<div id="listSection">
+  <input class="search" id="searchInput" placeholder="搜索..." oninput="render()">
+  <div class="filters">
+    <span class="f on" onclick="setF('全部',this)">全部</span>
+    <span class="f" onclick="setF('推理',this)">推理</span>
+    <span class="f" onclick="setF('恐怖',this)">恐怖</span>
+    <span class="f" onclick="setF('机制',this)">机制</span>
+    <span class="f" onclick="setF('欢乐',this)">欢乐</span>
+  </div>
+  <div class="list" id="list"></div>
+</div>
 
 <nav class="nav">
   <button class="on" id="navSquare" onclick="go('square')">广场</button>
@@ -145,7 +165,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;padding:16px 16px 8
 <script>
 const SUPABASE_URL = 'https://mfdeckoqqyvihvwzukus.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGVja29xcXl2aWh2d3p1a3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Nzc2NzQsImV4cCI6MjEwMzE1MzY3NH0.MDVvtjnq99N294og4lvH2oFCHuif8pdHIEMr4EYwl9Q';
-let db, cars = [], filter = '全部', user = null, isReg = false, page = 'square';
+let db, cars = [], filter = '全部', user = null, isReg = false, page = 'square', mode = 'carpool';
 
 const fake = [
   {id:9001, script_name:'无人生还', game_time:'今晚 19:30', location:'徐汇', total_count:6, current_count:4, price:'98', host:'阿白', tags:['推理'], creator_id:null},
@@ -153,6 +173,14 @@ const fake = [
   {id:9003, script_name:'年轮', game_time:'周六 15:00', location:'浦东', total_count:7, current_count:5, price:'108', host:'林', tags:['机制'], creator_id:null},
   {id:9004, script_name:'第七号嫌疑人', game_time:'今晚 20:00', location:'黄浦', total_count:6, current_count:2, price:'88', host:'侦探', tags:['推理'], creator_id:null}
 ];
+
+function showList(m){
+  mode=m;
+  document.getElementById('listSection').style.display='block';
+  document.querySelector('.scroll-hint').style.display='none';
+  render();
+  window.scrollTo({top:document.getElementById('listSection').offsetTop-20,behavior:'smooth'});
+}
 
 function openAuth(){document.getElementById('authModal').style.display='flex';upd()}
 function closeAuth(){document.getElementById('authModal').style.display='none'}
@@ -213,6 +241,7 @@ async function load(){
 }
 
 function render(){
+  if(document.getElementById('listSection').style.display==='none')return;
   const q=(document.getElementById('searchInput').value||'').toLowerCase();
   let list=cars;
   if(page==='my'){
@@ -224,7 +253,7 @@ function render(){
     return(!q||t.includes(q))&&(filter==='全部'||(c.tags||[]).some(x=>String(x).includes(filter)));
   });
   const el=document.getElementById('list');
-  el.innerHTML=list.length?'':'<div class="empty">暂无案件</div>';
+  el.innerHTML=list.length?'':'<div class="empty">暂无</div>';
   list.forEach(c=>{
     const need=Math.max(0,(c.total_count||0)-(c.current_count||0));
     const mine=user&&c.creator_id===user.id;
@@ -262,7 +291,7 @@ function go(p){
   page=p;
   document.getElementById('navSquare').classList.toggle('on',p==='square');
   document.getElementById('navMy').classList.toggle('on',p==='my');
-  render();
+  if(document.getElementById('listSection').style.display!=='none')render();
 }
 
 document.getElementById('pubForm').onsubmit=async e=>{
@@ -289,6 +318,7 @@ document.getElementById('pubForm').onsubmit=async e=>{
   document.getElementById('pubForm').reset();
   closePub();
   go('my');
+  showList('carpool');
   load();
 };
 
