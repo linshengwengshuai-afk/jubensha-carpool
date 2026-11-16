@@ -48,8 +48,8 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .need{color:var(--accent);font-size:13px;font-weight:500}
 .btn{background:var(--accent);color:#000;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
 .btn-o{background:transparent;border:1px solid var(--line);color:var(--sub);padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:flex-end;z-index:100}
-.modal-box{background:#111;border-radius:16px 16px 0 0;padding:20px;width:100%;max-height:85vh;overflow-y:auto}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal-box{background:#111;border-radius:16px;padding:20px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto}
 .modal-box h3{font-size:18px;margin-bottom:16px}
 .field{margin-bottom:12px}
 .field label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
@@ -62,8 +62,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 @media(min-width:600px){
   .hero h2{font-size:42px}
   .grid{grid-template-columns:1fr 1fr}
-  .modal{align-items:center}
-  .modal-box{border-radius:16px;max-width:900px}
+  .modal-box{max-width:900px}
 }
 @media(min-width:900px){
   .wrap{max-width:1000px}
@@ -143,7 +142,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:20px">
       <div>
         <label style="font-size:12px;color:#888">粘贴群消息，例如：</label>
-        <textarea id="pasteArea" style="width:100%;height:180px;background:#0d0d0d;border:1px solid #2a2a2a;color:#f0f0f0;border-radius:8px;padding:10px;font-size:13px;margin-top:6px" placeholder="《年轮》
+        <textarea id="pasteArea" style="width:100%;height:180px;background:#0d0d0d;border:1px solid #2a2a2a;color:#f0f0f0;border-radius:8px;padding:10px;font-size:13px;margin-top:6px" placeholder="《狗岛谋杀循环》
 开局时间：2026.09.05 14:00
 地点：炸蛋推理社
 费用：98元/位
@@ -152,7 +151,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
         <button type="button" class="btn" style="width:100%;margin-top:8px" onclick="smartParse()">智能识别并自动填表</button>
       </div>
       <form id="pubForm">
-        <div class="field"><label>剧本名称</label><input id="fName" required placeholder="例如：年轮"></div>
+        <div class="field"><label>剧本名称</label><input id="fName" required placeholder="例如：狗岛谋杀循环"></div>
         <div class="field"><label>开局时间</label><input id="fTime" required placeholder="例如：2026-09-05 14:00"></div>
         <div class="field"><label>开局地点</label><input id="fLoc" required placeholder="例如：炸蛋推理社"></div>
         <div class="row">
