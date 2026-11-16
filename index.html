@@ -2,143 +2,99 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>拼车</title>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --bg:#1a1d28;
-  --card:#252d28;
-  --text:#e0e0e0;
-  --sub:#6a6a6a;
-  --yellow:#c9a050;
-  --mint:#6bb5a0;
-  --red:#b85c5c;
-  --line:#353d35;
+  --bg:#0d0d0d;
+  --card:#161616;
+  --text:#f0f0f0;
+  --sub:#888;
+  --accent:#4ade80;
+  --line:#2a2a2a;
 }
-*{box-sizing:border-box;margin:0;padding:0;font-family:"Press Start 2P",monospace;-webkit-tap-highlight-color:transparent;image-rendering:pixelated}
-body{background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px 90px;font-size:10px;line-height:1.6}
-.wrap{max-width:480px;margin:0 auto}
-.hero{text-align:center;padding:20px 0 30px}
-.hero h1{font-size:16px;color:var(--yellow);margin-bottom:8px}
-.hero p{font-size:8px;color:var(--sub)}
-.chars{display:flex;justify-content:center;gap:40px;margin:20px 0}
-.char{width:40px;height:48px}
-.scroll-hint{text-align:center;font-size:7px;color:var(--sub);margin:30px 0 20px;animation:blink 1.5s infinite}
-@keyframes blink{50%{opacity:.3}}
-.mode-btns{display:flex;gap:12px;margin-bottom:20px}
-.mode-btn{flex:1;background:var(--card);border:2px solid var(--line);padding:20px 8px;font-size:10px;font-family:inherit;color:var(--text);cursor:pointer;text-align:center}
-.mode-btn:active{background:var(--yellow);color:#1a1d28}
-.mode-btn .icon{font-size:16px;display:block;margin-bottom:6px}
-.filters{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);min-height:100vh}
+.nav{position:sticky;top:0;background:rgba(13,13,13,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;z-index:50}
+.nav h1{font-size:18px;font-weight:600;letter-spacing:-.5px}
+.user{background:var(--accent);color:#000;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
+.hero{padding:60px 20px 40px;text-align:center;max-width:600px;margin:0 auto}
+.hero h2{font-size:32px;font-weight:700;letter-spacing:-1px;margin-bottom:12px}
+.hero p{color:var(--sub);font-size:15px;line-height:1.6}
+.actions{display:flex;gap:12px;max-width:480px;margin:0 auto 40px;padding:0 20px}
+.action{flex:1;background:var(--card);border:1px solid var(--line);padding:24px 16px;border-radius:12px;text-align:center;cursor:pointer;transition:border-color .2s}
+.action:hover{border-color:var(--accent)}
+.action .icon{font-size:24px;margin-bottom:8px}
+.action .title{font-size:15px;font-weight:600}
+.action .desc{font-size:12px;color:var(--sub);margin-top:4px}
+.wrap{max-width:800px;margin:0 auto;padding:0 20px 100px}
+.search{width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);padding:12px 16px;border-radius:8px;font-size:14px;margin-bottom:16px;outline:none}
+.search:focus{border-color:var(--accent)}
+.filters{display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px}
 .filters::-webkit-scrollbar{display:none}
-.f{background:var(--card);border:2px solid var(--line);color:var(--sub);padding:5px 8px;font-size:7px;cursor:pointer;white-space:nowrap}
-.f.on{background:var(--mint);color:#1a1d28;border-color:#1a1a1a}
-.search{width:100%;background:var(--card);border:2px solid var(--line);color:var(--text);padding:8px;font-size:9px;font-family:inherit;margin-bottom:12px;outline:none}
-.search:focus{border-color:var(--yellow)}
-.list{display:flex;flex-direction:column;gap:8px}
-.item{background:var(--card);border:2px solid var(--line);padding:10px}
-.item-title{font-size:9px;color:var(--mint);margin-bottom:6px}
-.item-row{font-size:7px;color:var(--sub);margin-bottom:3px}
-.item-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
-.need{color:var(--red);font-size:7px}
-.btn{background:var(--yellow);color:#1a1d28;border:2px solid #1a1a1a;padding:5px 8px;font-size:7px;font-family:inherit;cursor:pointer}
-.btn-o{background:transparent;border:2px solid var(--line);color:var(--sub);padding:5px 8px;font-size:7px;font-family:inherit;cursor:pointer}
-.user{position:absolute;top:16px;right:16px;background:var(--yellow);color:#1a1d28;padding:5px 8px;border:2px solid #1a1a1a;font-size:7px;cursor:pointer}
-.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:2px solid #1a1a1a;display:flex;padding:8px 0}
-.nav button{flex:1;background:none;border:none;color:var(--sub);font-size:7px;font-family:inherit;padding:5px}
-.nav button.on{color:var(--yellow)}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:flex-end;z-index:100}
-.modal-box{background:var(--bg);border-top:2px solid #1a1a1a;padding:16px;width:100%;max-height:85vh;overflow-y:auto}
-.modal-box h3{font-size:11px;color:var(--yellow);margin-bottom:14px}
-.field{margin-bottom:10px}
-.field label{display:block;font-size:7px;color:var(--sub);margin-bottom:3px}
-.field input{width:100%;background:var(--card);border:2px solid var(--line);color:var(--text);height:32px;padding:0 8px;font-size:9px;font-family:inherit}
-.row{display:flex;gap:8px}
+.f{background:var(--card);border:1px solid var(--line);color:var(--sub);padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;white-space:nowrap}
+.f.on{background:var(--accent);color:#000;border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:1fr;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card-title{font-size:16px;font-weight:600;margin-bottom:8px}
+.card-row{font-size:13px;color:var(--sub);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.card-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.need{color:var(--accent);font-size:13px;font-weight:500}
+.btn{background:var(--accent);color:#000;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
+.btn-o{background:transparent;border:1px solid var(--line);color:var(--sub);padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid var(--line);display:flex;padding:10px 0 14px}
+.bottom-nav button{flex:1;background:none;border:none;color:var(--sub);font-size:12px;padding:4px}
+.bottom-nav button.on{color:var(--text)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:flex-end;z-index:100}
+.modal-box{background:#111;border-radius:16px 16px 0 0;padding:20px;width:100%;max-height:85vh;overflow-y:auto}
+.modal-box h3{font-size:18px;margin-bottom:16px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+.field input{width:100%;background:#0d0d0d;border:1px solid var(--line);color:var(--text);height:44px;border-radius:8px;padding:0 12px;font-size:15px}
+.row{display:flex;gap:10px}
 .row .field{flex:1}
-.empty{text-align:center;padding:32px;color:var(--sub);font-size:7px}
+.empty{text-align:center;padding:40px;color:var(--sub)}
 #listSection{display:none}
 
 @media(min-width:600px){
-  body{padding:30px 24px 100px;font-size:12px}
-  .wrap{max-width:640px}
-  .hero h1{font-size:20px}
-  .hero p{font-size:10px}
-  .char{width:48px;height:56px}
-  .mode-btn{padding:28px 12px;font-size:12px}
-  .mode-btn .icon{font-size:20px}
-  .f,.btn,.btn-o{font-size:9px;padding:8px 12px}
-  .search{font-size:11px;padding:10px}
-  .item{padding:14px}
-  .item-title{font-size:11px}
-  .item-row{font-size:9px}
-  .nav button{font-size:9px;padding:8px}
-  .user{font-size:9px;padding:6px 10px}
-  .modal-box{max-width:480px;margin:0 auto;border-radius:0}
+  .hero h2{font-size:42px}
+  .grid{grid-template-columns:1fr 1fr}
+  .modal{align-items:center}
+  .modal-box{border-radius:16px;max-width:420px}
 }
-
 @media(min-width:900px){
-  body{padding:40px 32px 110px}
-  .wrap{max-width:800px}
-  .hero{padding:40px 0 50px}
-  .hero h1{font-size:24px}
-  .chars{gap:60px}
-  .char{width:56px;height:64px}
-  .mode-btns{gap:20px}
-  .mode-btn{padding:36px 16px;font-size:14px}
-  .list{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .nav{max-width:800px;left:50%;transform:translateX(-50%);border-radius:0}
+  .wrap{max-width:1000px}
+  .grid{grid-template-columns:1fr 1fr 1fr}
 }
 </style>
 </head>
 <body>
-<span class="user" id="userTag" onclick="openAuth()">登录</span>
-<div class="wrap">
+<nav class="nav">
+  <h1>拼车</h1>
+  <span class="user" id="userTag" onclick="openAuth()">登录</span>
+</nav>
+
 <div class="hero">
-  <h1>\1f50d 拼车</h1>
-  <p>往下滚选择模式</p>
+  <h2>找到你的局</h2>
+  <p>推理剧本拼车，找人组局</p>
 </div>
-<div class="chars">
-  <svg class="char" viewBox="0 0 16 20" xmlns="http://www.w3.org/2000/svg">
-    <rect x="5" y="0" width="6" height="2" fill="#c9a050"/>
-    <rect x="4" y="2" width="8" height="2" fill="#e0d0a0"/>
-    <rect x="5" y="4" width="2" height="2" fill="#1a1a1a"/>
-    <rect x="9" y="4" width="2" height="2" fill="#1a1a1a"/>
-    <rect x="6" y="7" width="4" height="1" fill="#b85c5c"/>
-    <rect x="4" y="9" width="8" height="4" fill="#4a6080"/>
-    <rect x="3" y="13" width="3" height="3" fill="#4a6080"/>
-    <rect x="10" y="13" width="3" height="3" fill="#4a6080"/>
-    <rect x="5" y="16" width="2" height="4" fill="#3a3a3a"/>
-    <rect x="9" y="16" width="2" height="4" fill="#3a3a3a"/>
-  </svg>
-  <svg class="char" viewBox="0 0 16 20" xmlns="http://www.w3.org/2000/svg">
-    <rect x="6" y="0" width="4" height="2" fill="#2a2a2a"/>
-    <rect x="5" y="2" width="6" height="2" fill="#3a3a3a"/>
-    <rect x="4" y="4" width="8" height="2" fill="#1a1a1a"/>
-    <rect x="5" y="6" width="2" height="2" fill="#e8e0d0"/>
-    <rect x="9" y="6" width="2" height="2" fill="#e8e0d0"/>
-    <rect x="6" y="8" width="4" height="1" fill="#1a1a1a"/>
-    <rect x="5" y="10" width="6" height="3" fill="#2a2a2a"/>
-    <rect x="4" y="13" width="2" height="3" fill="#2a2a2a"/>
-    <rect x="10" y="13" width="2" height="3" fill="#2a2a2a"/>
-    <rect x="5" y="16" width="2" height="4" fill="#1a1a1a"/>
-    <rect x="9" y="16" width="2" height="4" fill="#1a1a1a"/>
-  </svg>
+
+<div class="actions">
+  <div class="action" onclick="showList('carpool')">
+    <div class="icon">\1f697</div>
+    <div class="title">拼车中心</div>
+    <div class="desc">加入已有的局</div>
+  </div>
+  <div class="action" onclick="openPub()">
+    <div class="icon">\1f4dd</div>
+    <div class="title">组局</div>
+    <div class="desc">发起新的拼车</div>
+  </div>
 </div>
-<div class="scroll-hint">↓ 继续往下</div>
-<div class="mode-btns">
-  <button class="mode-btn" onclick="showList('carpool')">
-    <span class="icon">\1f697</span>
-    拼车中心
-  </button>
-  <button class="mode-btn" onclick="showList('group')">
-    <span class="icon">\1f465</span>
-    组局
-  </button>
-</div>
-<div id="listSection">
-  <input class="search" id="searchInput" placeholder="搜索..." oninput="render()">
+
+<div class="wrap" id="listSection">
+  <input class="search" id="searchInput" placeholder="搜索剧本或地点" oninput="render()">
   <div class="filters">
     <span class="f on" onclick="setF('全部',this)">全部</span>
     <span class="f" onclick="setF('推理',this)">推理</span>
@@ -146,32 +102,34 @@ body{background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px 9
     <span class="f" onclick="setF('机制',this)">机制</span>
     <span class="f" onclick="setF('欢乐',this)">欢乐</span>
   </div>
-  <div class="list" id="list"></div>
+  <div class="grid" id="list"></div>
 </div>
-</div>
-<nav class="nav">
+
+<nav class="bottom-nav">
   <button class="on" id="navSquare" onclick="go('square')">广场</button>
   <button id="navMy" onclick="go('my')">我的</button>
 </nav>
+
 <div id="authModal" class="modal" style="display:none">
   <div class="modal-box">
     <h3 id="authTitle">登录</h3>
     <form id="authForm">
       <div class="field"><label>账号</label><input id="authUser" required></div>
       <div class="field"><label>密码</label><input type="password" id="authPass" required></div>
-      <button class="btn" style="width:100%;height:32px" type="submit" id="authBtn">登录</button>
+      <button class="btn" style="width:100%;height:44px" type="submit" id="authBtn">登录</button>
     </form>
-    <p style="font-size:7px;color:var(--sub);margin-top:8px" id="authTip"></p>
-    <div style="display:flex;gap:8px;margin-top:10px">
+    <p style="font-size:12px;color:var(--sub);margin-top:10px" id="authTip"></p>
+    <div style="display:flex;gap:10px;margin-top:16px">
       <button class="btn-o" style="flex:1" onclick="toggle()">切换注册</button>
       <button class="btn-o" style="flex:1" onclick="closeAuth()">取消</button>
     </div>
-    <button class="btn-o" style="width:100%;margin-top:6px;display:none" id="logoutBtn" onclick="logout()">退出</button>
+    <button class="btn-o" style="width:100%;margin-top:10px;display:none" id="logoutBtn" onclick="logout()">退出</button>
   </div>
 </div>
+
 <div id="pubModal" class="modal" style="display:none">
   <div class="modal-box">
-    <h3>发布拼车</h3>
+    <h3>发起拼车</h3>
     <form id="pubForm">
       <div class="field"><label>剧本</label><input id="fName" required></div>
       <div class="field"><label>时间</label><input id="fTime" required placeholder="今晚 19:00"></div>
@@ -180,34 +138,37 @@ body{background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px 9
         <div class="field"><label>总人数</label><input id="fTotal" type="number" required></div>
         <div class="field"><label>已有</label><input id="fCur" type="number" required></div>
       </div>
-      <div class="field"><label>费用</label><input id="fPrice" placeholder="98"></div>
-      <div class="field"><label>标签</label><input id="fTags" placeholder="推理"></div>
-      <button class="btn" style="width:100%;height:32px" type="submit">发布</button>
+      <div class="field"><label>费用</label><input id="fPrice" placeholder="98 / AA"></div>
+      <div class="field"><label>标签</label><input id="fTags" placeholder="推理 硬核"></div>
+      <button class="btn" style="width:100%;height:44px" type="submit">发布</button>
     </form>
-    <button class="btn-o" style="width:100%;margin-top:6px" onclick="closePub()">取消</button>
+    <button class="btn-o" style="width:100%;margin-top:10px" onclick="closePub()">取消</button>
   </div>
 </div>
+
 <script>
 const SUPABASE_URL = 'https://mfdeckoqqyvihvwzukus.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGVja29xcXl2aWh2d3p1a3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Nzc2NzQsImV4cCI6MjEwMzE1MzY3NH0.MDVvtjnq99N294og4lvH2oFCHuif8pdHIEMr4EYwl9Q';
-let db, cars = [], filter = '全部', user = null, isReg = false, page = 'square', mode = 'carpool';
+let db, cars = [], filter = '全部', user = null, isReg = false, page = 'square';
+
 const fake = [
-  {id:9001, script_name:'无人生还', game_time:'今晚 19:30', location:'徐汇', total_count:6, current_count:4, price:'98', host:'阿白', tags:['推理'], creator_id:null},
-  {id:9002, script_name:'恐怖游轮', game_time:'明天 14:00', location:'静安', total_count:5, current_count:3, price:'AA', host:'夜行', tags:['恐怖'], creator_id:null},
-  {id:9003, script_name:'年轮', game_time:'周六 15:00', location:'浦东', total_count:7, current_count:5, price:'108', host:'林', tags:['机制'], creator_id:null},
-  {id:9004, script_name:'第七号嫌疑人', game_time:'今晚 20:00', location:'黄浦', total_count:6, current_count:2, price:'88', host:'侦探', tags:['推理'], creator_id:null}
+  {id:9001, script_name:'无人生还', game_time:'今晚 19:30', location:'徐汇 · 密室空间', total_count:6, current_count:4, price:'98', host:'阿白', tags:['推理','硬核'], creator_id:null},
+  {id:9002, script_name:'恐怖游轮', game_time:'明天 14:00', location:'静安 · 黑匣子', total_count:5, current_count:3, price:'AA', host:'夜行', tags:['恐怖'], creator_id:null},
+  {id:9003, script_name:'年轮', game_time:'周六 15:00', location:'浦东 · 剧本社', total_count:7, current_count:5, price:'108', host:'林', tags:['机制','欢乐'], creator_id:null},
+  {id:9004, script_name:'第七号嫌疑人', game_time:'今晚 20:00', location:'黄浦 · 老房子', total_count:6, current_count:2, price:'88', host:'侦探', tags:['推理'], creator_id:null}
 ];
+
 function showList(m){
-  mode=m;
   document.getElementById('listSection').style.display='block';
-  document.querySelector('.scroll-hint').style.display='none';
   render();
   window.scrollTo({top:document.getElementById('listSection').offsetTop-20,behavior:'smooth'});
 }
+
 function openAuth(){document.getElementById('authModal').style.display='flex';upd()}
 function closeAuth(){document.getElementById('authModal').style.display='none'}
 function openPub(){if(!user)return openAuth();document.getElementById('pubModal').style.display='flex'}
 function closePub(){document.getElementById('pubModal').style.display='none'}
+
 function toggle(){
   isReg=!isReg;
   document.getElementById('authBtn').innerText=isReg?'注册':'登录';
@@ -215,6 +176,7 @@ function toggle(){
   document.querySelector('#authForm + p + div button').innerText=isReg?'切换登录':'切换注册';
   document.getElementById('authTip').innerText='';
 }
+
 function upd(){
   const t=document.getElementById('userTag');
   const l=document.getElementById('logoutBtn');
@@ -226,6 +188,7 @@ function upd(){
     l.style.display='none';
   }
 }
+
 async function init(){
   db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
   const{data:{session}}=await db.auth.getSession();
@@ -233,11 +196,12 @@ async function init(){
   db.auth.onAuthStateChange((_,s)=>{user=s?.user||null;upd();load()});
   upd();load();
 }
+
 document.getElementById('authForm').onsubmit=async e=>{
   e.preventDefault();
   const u=document.getElementById('authUser').value.trim();
   const p=document.getElementById('authPass').value;
-  if(u.length<2||p.length<6){document.getElementById('authTip').innerText='账号≥2 密码≥6';return}
+  if(u.length<2||p.length<6){document.getElementById('authTip').innerText='账号≥2，密码≥6';return}
   const email=u+'@carpool.local';
   const btn=document.getElementById('authBtn');
   btn.disabled=true;btn.innerText='...';
@@ -249,12 +213,15 @@ document.getElementById('authForm').onsubmit=async e=>{
   document.getElementById('authTip').innerText=isReg?'注册成功':'登录成功';
   setTimeout(closeAuth,500);
 };
+
 async function logout(){await db.auth.signOut();user=null;upd();closeAuth()}
+
 async function load(){
   const{data}=await db.from('carpools').select('*').order('id',{ascending:false});
   cars=[...fake,...(data||[])];
   render();
 }
+
 function render(){
   if(document.getElementById('listSection').style.display==='none')return;
   const q=(document.getElementById('searchInput').value||'').toLowerCase();
@@ -268,43 +235,47 @@ function render(){
     return(!q||t.includes(q))&&(filter==='全部'||(c.tags||[]).some(x=>String(x).includes(filter)));
   });
   const el=document.getElementById('list');
-  el.innerHTML=list.length?'':'<div class="empty">暂无</div>';
+  el.innerHTML=list.length?'':'<div class="empty">暂无拼车</div>';
   list.forEach(c=>{
     const need=Math.max(0,(c.total_count||0)-(c.current_count||0));
     const mine=user&&c.creator_id===user.id;
     const d=document.createElement('div');
-    d.className='item';
+    d.className='card';
     d.innerHTML=`
-      <div class="item-title">\1f4c4 ${c.script_name||'?'}</div>
-      <div class="item-row">\1f551 ${c.game_time||'-'}</div>
-      <div class="item-row">\1f4cd ${c.location||'-'}</div>
-      <div class="item-row">${c.price?'￥'+c.price+' · ':''}${c.host||'车头'}</div>
-      <div class="item-bottom">
-        <span class="need">? ${need>0?'缺'+need+'人':'已满'}</span>
+      <div class="card-title">${c.script_name||'未命名'}</div>
+      <div class="card-row">\1f551 ${c.game_time||'-'}</div>
+      <div class="card-row">\1f4cd ${c.location||'-'}</div>
+      <div class="card-row">${c.price?'￥'+c.price+' · ':''}${c.host||'车头'}</div>
+      <div class="card-bottom">
+        <span class="need">${need>0?'还缺 '+need+' 人':'已满'}</span>
         ${page==='my'?'<button class="btn-o" onclick="del('+c.id+')">删除</button>':(need>0&&!mine?'<button class="btn" onclick="join('+c.id+')">上车</button>':'')}
       </div>
     `;
     el.appendChild(d);
   });
 }
+
 function join(id){if(!user)return openAuth();alert('已上车')}
 async function del(id){
-  if(!confirm('删除?'))return;
+  if(!confirm('删除？'))return;
   await db.from('carpools').delete().eq('id',id).eq('creator_id',user.id);
   load();
 }
+
 function setF(f,el){
   filter=f;
   document.querySelectorAll('.f').forEach(x=>x.classList.remove('on'));
   el.classList.add('on');
   render();
 }
+
 function go(p){
   page=p;
   document.getElementById('navSquare').classList.toggle('on',p==='square');
   document.getElementById('navMy').classList.toggle('on',p==='my');
   if(document.getElementById('listSection').style.display!=='none')render();
 }
+
 document.getElementById('pubForm').onsubmit=async e=>{
   e.preventDefault();
   if(!user)return openAuth();
@@ -332,6 +303,7 @@ document.getElementById('pubForm').onsubmit=async e=>{
   showList('carpool');
   load();
 };
+
 window.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
