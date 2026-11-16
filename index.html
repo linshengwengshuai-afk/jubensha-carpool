@@ -194,6 +194,13 @@ const SUPABASE_URL = 'https://mfdeckoqqyvihvwzukus.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGVja29xcXl2aWh2d3p1a3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Nzc2NzQsImV4cCI6MjEwMzE1MzY3NH0.MDVvtjnq99N294og4lvH2oFCHuif8pdHIEMr4EYwl9Q';
 let db, cars = [], filter = '全部', user = null, isReg = false, page = 'square';
 
+function getMyCarIds() { return JSON.parse(localStorage.getItem('MY_CAR_IDS')) || []; }
+function addMyCarId(id) { const l = getMyCarIds(); if(!l.includes(id)) { l.push(id); localStorage.setItem('MY_CAR_IDS', JSON.stringify(l)); } }
+function removeMyCarId(id) { const l = getMyCarIds().filter(i => i != id); localStorage.setItem('MY_CAR_IDS', JSON.stringify(l)); }
+function getJoinedCarIds() { return JSON.parse(localStorage.getItem('JOINED_CAR_IDS')) || []; }
+function addJoinedCarId(id) { const l = getJoinedCarIds(); if(!l.includes(id)) { l.push(id); localStorage.setItem('JOINED_CAR_IDS', JSON.stringify(l)); } }
+function removeJoinedCarId(id) { const l = getJoinedCarIds().filter(i => i != id); localStorage.setItem('JOINED_CAR_IDS', JSON.stringify(l)); }
+
 const fake = [
   {id:9001, script_name:'无人生还', game_time:'今晚 19:30', location:'徐汇 · 密室空间', total_count:6, current_count:4, price:'98', host:'阿白', tags:['推理','硬核'], creator_id:null},
   {id:9002, script_name:'恐怖游轮', game_time:'明天 14:00', location:'静安 · 黑匣子', total_count:5, current_count:3, price:'AA', host:'夜行', tags:['恐怖'], creator_id:null},
@@ -278,8 +285,10 @@ function render(){
   });
   const el=document.getElementById('list');
   if(page==='my'){
-    const created = list.filter(c => user && c.creator_id === user.id);
-    const joined = list.filter(c => user && c.creator_id !== user.id);
+    const myIds = getMyCarIds();
+    const joinedIds = getJoinedCarIds();
+    const created = list.filter(c => myIds.includes(c.id) || (user && c.creator_id === user.id));
+    const joined = list.filter(c => joinedIds.includes(c.id) && !myIds.includes(c.id));
     el.innerHTML = '';
     if(created.length){
       const h=document.createElement('div');
@@ -326,12 +335,14 @@ function join(id){
   if(!c) return;
   if(c.current_count >= c.total_count){alert('已满');return}
   c.current_count = (c.current_count || 0) + 1;
+  addJoinedCarId(id);
   alert('已上车');
   render();
 }
 async function del(id){
   if(!confirm('删除？'))return;
   await db.from('carpools').delete().eq('id',id).eq('creator_id',user.id);
+  removeMyCarId(id);
   load();
 }
 
@@ -392,9 +403,10 @@ document.getElementById('pubForm').onsubmit=async e=>{
     members:[{name:un,isHost:true}],
     creator_id:user.id
   };
-  const{error}=await db.from('carpools').insert([payload]);
+  const{data,error}=await db.from('carpools').insert([payload]).select();
   if(error)return alert(error.message);
   alert('发布成功');
+  if(data && data[0]) addMyCarId(data[0].id);
   document.getElementById('pubForm').reset();
   closePub();
   go('my');
