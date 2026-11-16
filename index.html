@@ -6,57 +6,56 @@
 <title>剧本杀拼车助手</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--bg:#0b0c12;--card:rgba(24,25,36,.8);--border:rgba(229,169,60,.25);--gold:#e5a93c;--gold-l:#ffd580;--text:#f0f0f5;--sub:#9ca3af}
-*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}
-body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgba(229,169,60,.08) 0%,transparent 40%),radial-gradient(circle at 85% 85%,rgba(139,92,246,.08) 0%,transparent 40%);min-height:100vh;color:var(--text);display:flex;flex-direction:column;align-items:center}
-.header{width:100%;background:rgba(18,19,28,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
-.header-inner{max-width:1100px;margin:0 auto;min-height:56px;display:flex;justify-content:space-between;align-items:center;padding:8px 14px;gap:8px;flex-wrap:wrap}
-.logo-title{font-size:16px;font-weight:900;background:linear-gradient(90deg,#fff,#ffd580,#e5a93c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.logo-sub{font-size:9px;color:#9ca3af;letter-spacing:1px;font-family:monospace}
-.nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.nav-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--sub);padding:6px 12px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer}
-.nav-btn.active,.nav-btn:hover{background:linear-gradient(135deg,rgba(229,169,60,.2),rgba(229,169,60,.05));border-color:var(--gold);color:var(--gold-l)}
-.user-tag{background:rgba(229,169,60,.15);border:1px solid var(--gold);color:var(--gold-l);padding:5px 10px;border-radius:16px;font-size:12px;cursor:pointer}
-.main{width:100%;max-width:1100px;padding:14px;flex:1}
-.announce{background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(229,169,60,.08));border:1px solid rgba(239,68,68,.35);border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px}
-.search{width:100%;height:38px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.12);border-radius:19px;padding:0 14px;color:#fff;margin-bottom:8px}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.chip{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--sub);font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer}
+:root{--bg:#0b0c12;--card:rgba(22,23,34,.85);--border:rgba(229,169,60,.22);--gold:#e5a93c;--gold-l:#ffd580;--text:#f5f5f7;--sub:#a1a1aa;--red:#ef4444}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);background-image:radial-gradient(circle at 20% 10%,rgba(229,169,60,.06) 0%,transparent 35%),radial-gradient(circle at 80% 90%,rgba(139,92,246,.06) 0%,transparent 35%);min-height:100vh;color:var(--text);padding-bottom:80px}
+.header{width:100%;background:rgba(16,17,24,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.header-inner{max-width:1080px;margin:0 auto;min-height:52px;display:flex;justify-content:space-between;align-items:center;padding:6px 12px;gap:8px}
+.logo{font-size:15px;font-weight:800;background:linear-gradient(90deg,#fff,#ffd580);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav{display:flex;gap:4px;align-items:center}
+.nav-btn{background:transparent;border:none;color:var(--sub);padding:6px 10px;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer}
+.nav-btn.active{background:rgba(229,169,60,.18);color:var(--gold-l)}
+.user-tag{background:rgba(229,169,60,.15);color:var(--gold-l);padding:5px 10px;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer}
+.main{max-width:1080px;margin:0 auto;padding:12px}
+.announce{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:8px 12px;font-size:12px;color:#fca5a5;margin-bottom:10px}
+.search{width:100%;height:36px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:0 14px;color:#fff;font-size:13px;margin-bottom:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--sub);font-size:11px;padding:4px 10px;border-radius:12px;cursor:pointer}
 .chip.active{background:rgba(229,169,60,.2);border-color:var(--gold);color:var(--gold-l)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
-.title{font-size:16px;font-weight:700;margin-bottom:6px}
-.meta{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:8px}
-.btn{background:linear-gradient(135deg,#e5a93c,#d97706);color:#0b0c10;border:none;padding:6px 12px;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer}
-.btn-ghost{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--sub);padding:6px 12px;border-radius:14px;font-size:12px;cursor:pointer}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
-.modal-card{background:#191a26;border:1px solid var(--border);border-radius:16px;padding:20px;width:100%;max-width:360px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;position:relative}
+.card-title{font-size:15px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.card-meta{font-size:12px;color:var(--sub);line-height:1.55;margin-bottom:8px}
+.badge{font-size:10px;padding:2px 6px;border-radius:8px;background:rgba(229,169,60,.15);color:var(--gold-l)}
+.need{color:var(--gold);font-weight:700;font-size:13px}
+.btn{background:linear-gradient(135deg,#e5a93c,#d97706);color:#0b0c10;border:none;padding:6px 12px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-sm{padding:4px 8px;font-size:11px}
+.btn-ghost{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:var(--sub);padding:4px 8px;border-radius:8px;font-size:11px;cursor:pointer}
+.fab{position:fixed;bottom:16px;right:16px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#e5a93c,#d97706);color:#0b0c10;border:none;font-size:24px;font-weight:700;box-shadow:0 4px 16px rgba(229,169,60,.4);z-index:90;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center;z-index:200}
+.modal-card{background:#181922;border-radius:16px 16px 0 0;padding:16px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto}
 .form-group{margin-bottom:10px}
-.form-group label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
-.form-group input{width:100%;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);color:#fff;height:38px;border-radius:8px;padding:0 10px}
-.tip{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.5}
-@media(max-width:700px){.header-inner{flex-direction:column}.nav{justify-content:center}.grid{grid-template-columns:1fr}}
+.form-group label{display:block;font-size:12px;color:var(--sub);margin-bottom:3px}
+.form-group input{width:100%;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);color:#fff;height:36px;border-radius:8px;padding:0 10px;font-size:13px}
+.empty{text-align:center;padding:40px 16px;color:var(--sub);font-size:13px}
+@media(min-width:700px){.modal{align-items:center}.modal-card{border-radius:16px;max-height:80vh}.fab{display:none}}
 </style>
 </head>
 <body>
 <header class="header">
   <div class="header-inner">
-    <div onclick="switchTab('square')" style="cursor:pointer">
-      <div class="logo-title">剧本杀拼车助手</div>
-      <div class="logo-sub">账号密码登录 · 数据不丢</div>
-    </div>
+    <div class="logo" onclick="switchTab('square')">剧本杀拼车</div>
     <nav class="nav">
-      <button class="nav-btn active" id="tabSquare" onclick="switchTab('square')">拼车广场</button>
-      <button class="nav-btn" id="tabMy" onclick="switchTab('my')">我的拼车</button>
-      <button class="nav-btn" id="tabPub" onclick="switchTab('pub')">发起拼车</button>
-      <span class="user-tag" id="userTag" onclick="openAuth()">登录 / 注册</span>
+      <button class="nav-btn active" id="tabSquare" onclick="switchTab('square')">广场</button>
+      <button class="nav-btn" id="tabMy" onclick="switchTab('my')">我的</button>
+      <span class="user-tag" id="userTag" onclick="openAuth()">登录</span>
     </nav>
   </div>
 </header>
 <main class="main">
   <section id="pageSquare">
-    <div class="announce"><b>组局公约</b> · 硬核推理 / 恐怖 / 机制 / 欢乐 · 严禁情感本</div>
-    <input class="search" id="searchInput" placeholder="搜索剧本、地点..." oninput="renderSquare()">
+    <div class="announce">硬核推理 · 恐怖 · 机制 · 欢乐 · 禁情感本</div>
+    <input class="search" id="searchInput" placeholder="搜索剧本 / 地点 / 车头" oninput="renderSquare()">
     <div class="chips">
       <span class="chip active" onclick="setTag('全部',this)">全部</span>
       <span class="chip" onclick="setTag('推理',this)">推理</span>
@@ -67,41 +66,44 @@ body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgb
     <div class="grid" id="squareList"></div>
   </section>
   <section id="pageMy" style="display:none"><div class="grid" id="myList"></div></section>
-  <section id="pagePub" style="display:none">
-    <div class="card" style="max-width:460px;margin:0 auto">
-      <h3 style="color:var(--gold-l);margin-bottom:10px">发起拼车</h3>
-      <form id="pubForm">
-        <div class="form-group"><label>剧本名称 *</label><input id="fName" required></div>
-        <div class="form-group"><label>开局时间 *</label><input id="fTime" required placeholder="如 11月15日 14:00"></div>
-        <div class="form-group"><label>地点 *</label><input id="fLoc" required></div>
-        <div style="display:flex;gap:8px">
-          <div class="form-group" style="flex:1"><label>总人数 *</label><input id="fTotal" type="number" required></div>
-          <div class="form-group" style="flex:1"><label>当前人数 *</label><input id="fCur" type="number" required></div>
-        </div>
-        <div class="form-group"><label>人均费用</label><input id="fPrice" placeholder="98 或 AA"></div>
-        <div class="form-group"><label>联系方式</label><input id="fContact" placeholder="微信（选填）"></div>
-        <div class="form-group"><label>标签</label><input id="fTags" placeholder="推理 硬核"></div>
-        <button class="btn" style="width:100%;height:38px" type="submit">发布</button>
-      </form>
-    </div>
-  </section>
 </main>
+<button class="fab" onclick="openPub()">+</button>
 
 <div id="authModal" class="modal" style="display:none">
   <div class="modal-card">
-    <h3 style="color:var(--gold-l);margin-bottom:10px" id="authTitle">登录 / 注册</h3>
-    <p class="tip" style="margin-bottom:12px">用账号+密码即可。注册后请记住，换设备登录同一账号就能找回数据。</p>
+    <h3 style="color:var(--gold-l);margin-bottom:8px" id="authTitle">登录 / 注册</h3>
+    <p style="font-size:12px;color:var(--sub);margin-bottom:12px">记住账号密码即可，换设备登录同一账号数据不丢。</p>
     <form id="authForm">
-      <div class="form-group"><label>账号</label><input id="authUser" required placeholder="例如：detective123"></div>
+      <div class="form-group"><label>账号</label><input id="authUser" required placeholder="2位以上"></div>
       <div class="form-group"><label>密码</label><input type="password" id="authPass" required placeholder="至少6位"></div>
-      <button class="btn" style="width:100%;height:40px" type="submit" id="authBtn">登录</button>
+      <button class="btn" style="width:100%;height:38px" type="submit" id="authBtn">登录</button>
     </form>
-    <div class="tip" id="authTip"></div>
+    <div style="font-size:12px;color:var(--sub);margin-top:8px" id="authTip"></div>
     <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn-ghost" style="flex:1" onclick="toggleMode()">切换到注册</button>
+      <button class="btn-ghost" style="flex:1" onclick="toggleMode()">切换注册</button>
       <button class="btn-ghost" style="flex:1" onclick="closeAuth()">取消</button>
     </div>
-    <button class="btn-ghost" style="width:100%;margin-top:8px;display:none" id="logoutBtn" onclick="logout()">退出登录</button>
+    <button class="btn-ghost" style="width:100%;margin-top:8px;display:none" id="logoutBtn" onclick="logout()">退出</button>
+  </div>
+</div>
+
+<div id="pubModal" class="modal" style="display:none">
+  <div class="modal-card">
+    <h3 style="color:var(--gold-l);margin-bottom:10px">发起拼车</h3>
+    <form id="pubForm">
+      <div class="form-group"><label>剧本名称 *</label><input id="fName" required></div>
+      <div class="form-group"><label>开局时间 *</label><input id="fTime" required placeholder="今晚19:00 或 11月15日 14:00"></div>
+      <div class="form-group"><label>地点 *</label><input id="fLoc" required></div>
+      <div style="display:flex;gap:8px">
+        <div class="form-group" style="flex:1"><label>总人数 *</label><input id="fTotal" type="number" required min="2"></div>
+        <div class="form-group" style="flex:1"><label>已有人数 *</label><input id="fCur" type="number" required min="1"></div>
+      </div>
+      <div class="form-group"><label>人均费用</label><input id="fPrice" placeholder="98 或 AA"></div>
+      <div class="form-group"><label>联系方式</label><input id="fContact" placeholder="微信（选填）"></div>
+      <div class="form-group"><label>标签</label><input id="fTags" placeholder="推理 硬核"></div>
+      <button class="btn" style="width:100%;height:38px" type="submit">发布</button>
+    </form>
+    <button class="btn-ghost" style="width:100%;margin-top:8px" onclick="closePub()">取消</button>
   </div>
 </div>
 
@@ -112,39 +114,39 @@ let db, cars = [], tag = '全部', currentUser = null, isRegister = false;
 
 function openAuth() { document.getElementById('authModal').style.display = 'flex'; updateAuthUI(); }
 function closeAuth() { document.getElementById('authModal').style.display = 'none'; }
+function openPub() { if (!currentUser) return openAuth(); document.getElementById('pubModal').style.display = 'flex'; }
+function closePub() { document.getElementById('pubModal').style.display = 'none'; }
 
 function toggleMode() {
   isRegister = !isRegister;
   document.getElementById('authBtn').innerText = isRegister ? '注册' : '登录';
   document.getElementById('authTitle').innerText = isRegister ? '注册账号' : '登录';
-  document.querySelector('#authForm + .tip + div button').innerText = isRegister ? '切换到登录' : '切换到注册';
+  document.querySelector('#authForm + div + div button').innerText = isRegister ? '切换登录' : '切换注册';
   document.getElementById('authTip').innerText = '';
 }
 
 function updateAuthUI() {
-  const tag = document.getElementById('userTag');
+  const tagEl = document.getElementById('userTag');
   const logoutBtn = document.getElementById('logoutBtn');
   if (currentUser) {
-    const username = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || '已登录';
-    tag.innerText = username;
+    const name = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || '已登录';
+    tagEl.innerText = name;
     logoutBtn.style.display = 'block';
-    document.getElementById('authTitle').innerText = '已登录';
-    document.getElementById('authTip').innerHTML = '账号：' + username + '<br>换设备用同一账号密码即可找回数据。';
+    document.getElementById('authTip').innerHTML = '已登录：' + name + '<br>换设备用同一账号密码即可。';
   } else {
-    tag.innerText = '登录 / 注册';
+    tagEl.innerText = '登录';
     logoutBtn.style.display = 'none';
   }
 }
 
 async function init() {
-  if (!window.supabase) return alert('SDK 加载失败');
   db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const { data: { session } } = await db.auth.getSession();
   if (session) currentUser = session.user;
   db.auth.onAuthStateChange((_, s) => {
     currentUser = s?.user || null;
     updateAuthUI();
-    if (currentUser) loadCars();
+    loadCars();
   });
   updateAuthUI();
   loadCars();
@@ -155,7 +157,7 @@ document.getElementById('authForm').onsubmit = async e => {
   const username = document.getElementById('authUser').value.trim();
   const password = document.getElementById('authPass').value;
   if (username.length < 2 || password.length < 6) {
-    document.getElementById('authTip').innerText = '账号至少2位，密码至少6位';
+    document.getElementById('authTip').innerText = '账号≥2位，密码≥6位';
     return;
   }
   const email = username + '@carpool.local';
@@ -163,23 +165,17 @@ document.getElementById('authForm').onsubmit = async e => {
   btn.disabled = true; btn.innerText = '处理中...';
   let error;
   if (isRegister) {
-    const { error: err } = await db.auth.signUp({
-      email,
-      password,
-      options: { data: { username } }
-    });
-    error = err;
+    ({ error } = await db.auth.signUp({ email, password, options: { data: { username } } }));
   } else {
-    const { error: err } = await db.auth.signInWithPassword({ email, password });
-    error = err;
+    ({ error } = await db.auth.signInWithPassword({ email, password }));
   }
   btn.disabled = false; btn.innerText = isRegister ? '注册' : '登录';
   if (error) {
-    document.getElementById('authTip').innerText = (isRegister ? '注册' : '登录') + '失败：' + error.message;
+    document.getElementById('authTip').innerText = error.message;
     return;
   }
   document.getElementById('authTip').innerText = isRegister ? '注册成功，请记住账号密码' : '登录成功';
-  setTimeout(closeAuth, 800);
+  setTimeout(closeAuth, 700);
 };
 
 async function logout() {
@@ -190,7 +186,6 @@ async function logout() {
 }
 
 async function loadCars() {
-  if (!db) return;
   const { data, error } = await db.from('carpools').select('*').order('id', { ascending: false });
   if (error) { console.error(error); return; }
   cars = data || [];
@@ -201,22 +196,22 @@ async function loadCars() {
 function renderSquare() {
   const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
   const list = cars.filter(c => {
-    const t = (c.script_name||'') + (c.location||'') + (c.host||'');
-    return (!q || t.toLowerCase().includes(q)) && (tag === '全部' || (c.tags||[]).some(x => x.includes(tag)));
+    const text = ((c.script_name||'') + (c.location||'') + (c.host||'')).toLowerCase();
+    return (!q || text.includes(q)) && (tag === '全部' || (c.tags||[]).some(x => String(x).includes(tag)));
   });
   const el = document.getElementById('squareList');
-  el.innerHTML = list.length ? '' : '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">暂无拼车</div>';
+  el.innerHTML = list.length ? '' : '<div class="empty">暂无拼车，点击右下角 + 发起</div>';
   list.forEach(c => {
-    const diff = (c.total_count||0) - (c.current_count||0);
+    const need = Math.max(0, (c.total_count||0) - (c.current_count||0));
     const isMine = currentUser && c.creator_id === currentUser.id;
     const div = document.createElement('div');
     div.className = 'card';
     div.innerHTML = `
-      <div class="title">《${c.script_name||'未命名'}》 ${isMine ? '<span style="color:#e5a93c;font-size:11px">我的</span>' : ''}</div>
-      <div class="meta">📅 ${c.game_time||'-'}<br>📍 ${c.location||'-'} ${c.price ? ' · ￥'+c.price : ''}<br>👤 ${c.host||'车头'}</div>
+      <div class="card-title">《${c.script_name||'未命名'}》 ${isMine ? '<span class="badge">我的</span>' : ''}</div>
+      <div class="card-meta">📅 ${c.game_time||'-'}<br>📍 ${c.location||'-'} ${c.price ? ' · ￥'+c.price : ''}<br>👤 ${c.host||'车头'}</div>
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="color:var(--gold);font-weight:700">${c.current_count||0}/${c.total_count||0}</span>
-        ${diff > 0 && !isMine ? '<button class="btn" onclick="join('+c.id+')">上车</button>' : (diff<=0 ? '<span style="font-size:11px;color:#9ca3af">已满</span>' : '')}
+        <span class="need">${need > 0 ? '还缺 '+need+' 人' : '已满'}</span>
+        ${need > 0 && !isMine ? '<button class="btn btn-sm" onclick="join('+c.id+')">上车</button>' : ''}
       </div>
     `;
     el.appendChild(div);
@@ -226,23 +221,34 @@ function renderSquare() {
 function renderMy() {
   const el = document.getElementById('myList');
   if (!currentUser) {
-    el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">请先登录查看我的拼车</div>';
+    el.innerHTML = '<div class="empty">请先登录查看我的拼车</div>';
     return;
   }
   const mine = cars.filter(c => c.creator_id === currentUser.id);
-  el.innerHTML = mine.length ? '' : '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">还没有发起的拼车</div>';
+  el.innerHTML = mine.length ? '' : '<div class="empty">还没有发起的拼车</div>';
   mine.forEach(c => {
+    const need = Math.max(0, (c.total_count||0) - (c.current_count||0));
     const div = document.createElement('div');
     div.className = 'card';
-    div.innerHTML = `<div class="title">《${c.script_name}》</div><div class="meta">${c.game_time} · ${c.location}</div>`;
+    div.innerHTML = `
+      <div class="card-title">《${c.script_name}》</div>
+      <div class="card-meta">${c.game_time} · ${c.location}<br>还缺 ${need} 人</div>
+      <button class="btn-ghost" onclick="deleteCar(${c.id})">删除</button>
+    `;
     el.appendChild(div);
   });
 }
 
-function join(id) {
+async function join(id) {
   if (!currentUser) return openAuth();
-  alert('已上车！');
-  renderSquare();
+  alert('已上车！（后续可扩展自动加人数）');
+}
+
+async function deleteCar(id) {
+  if (!confirm('确定删除？')) return;
+  const { error } = await db.from('carpools').delete().eq('id', id).eq('creator_id', currentUser.id);
+  if (error) return alert('删除失败：' + error.message);
+  loadCars();
 }
 
 function setTag(t, el) {
@@ -255,9 +261,8 @@ function setTag(t, el) {
 function switchTab(name) {
   document.getElementById('pageSquare').style.display = name==='square'?'block':'none';
   document.getElementById('pageMy').style.display = name==='my'?'block':'none';
-  document.getElementById('pagePub').style.display = name==='pub'?'block':'none';
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab' + (name==='square'?'Square':name==='my'?'My':'Pub')).classList.add('active');
+  document.getElementById('tab' + (name==='square'?'Square':'My')).classList.add('active');
 }
 
 document.getElementById('pubForm').onsubmit = async e => {
@@ -274,15 +279,16 @@ document.getElementById('pubForm').onsubmit = async e => {
     current_count: +document.getElementById('fCur').value,
     price: document.getElementById('fPrice').value.trim(),
     host: username,
-    contact: document.getElementById('fContact').value.trim() || '车头未留',
+    contact: document.getElementById('fContact').value.trim() || '',
     tags: document.getElementById('fTags').value.trim().split(/\s+/).filter(Boolean),
     members: [{ name: username, isHost: true }],
     creator_id: currentUser.id
   };
-  const { data, error } = await db.from('carpools').insert([payload]).select();
+  const { error } = await db.from('carpools').insert([payload]);
   if (error) return alert('发布失败：' + error.message);
   alert('发布成功！');
   document.getElementById('pubForm').reset();
+  closePub();
   switchTab('my');
   loadCars();
 };
