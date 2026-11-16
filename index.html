@@ -22,7 +22,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .top-tabs{display:flex;gap:16px;margin-left:24px}
 .top-tabs button{background:none;border:none;color:var(--sub);font-size:14px;font-weight:500;cursor:pointer;padding:4px 0;border-bottom:2px solid transparent}
 .top-tabs button.on{color:var(--text);border-bottom-color:var(--accent)}
-.notice{background:linear-gradient(135deg,#1a1a1a 0%,#222 100%);border:1px solid #333;padding:16px 20px;margin:20px auto;max-width:720px;border-radius:10px;font-size:14px;color:#ccc;line-height:1.7;text-align:center}
+.notice{background:linear-gradient(135deg,#1a1a1a 0%,#222 100%);border:1px solid #333;padding:16px 20px;margin:60px auto 20px;max-width:720px;border-radius:10px;font-size:14px;color:#ccc;line-height:1.7;text-align:center;position:relative;z-index:10}
 .notice strong{color:#4ade80;font-weight:600}
 .hero{padding:40px 20px 40px;text-align:center;max-width:600px;margin:0 auto}
 .hero h2{font-size:32px;font-weight:700;letter-spacing:-1px;margin-bottom:12px}
@@ -165,17 +165,16 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
         <div class="field"><label>标签</label><input id="fTags" placeholder="推理 硬核"></div>
         <div class="row">
           <div class="field">
-            <label>微信二维码</label>
-            <input type="file" id="fWx" accept="image/*" style="font-size:12px">
-            <img id="wxPreview" style="max-width:80px;margin-top:6px;display:none;border-radius:4px">
+            <label>微信号</label>
+            <input id="fWx" placeholder="例如：wx_123456">
           </div>
           <div class="field">
-            <label>群二维码</label>
+            <label>群二维码（可选）</label>
             <input type="file" id="fGroup" accept="image/*" style="font-size:12px">
             <img id="groupPreview" style="max-width:80px;margin-top:6px;display:none;border-radius:4px">
           </div>
         </div>
-        <p style="font-size:11px;color:#888;margin-bottom:8px">微信或群二维码至少上传一个</p>
+        <p style="font-size:11px;color:#888;margin-bottom:8px">微信号或群二维码至少填一个</p>
         <button class="btn" style="width:100%;height:44px" type="submit">立即发布至广场</button>
       </form>
     </div>
@@ -310,13 +309,21 @@ function go(p){
   page=p;
   document.getElementById('navSquare').classList.toggle('on',p==='square');
   document.getElementById('navMy').classList.toggle('on',p==='my');
-  if(document.getElementById('listSection').style.display!=='none')render();
+  document.getElementById('listSection').style.display='block';
+  if(p==='my'){
+    document.querySelector('.hero').style.display='none';
+    document.querySelector('.actions').style.display='none';
+  }else{
+    document.querySelector('.hero').style.display='block';
+    document.querySelector('.actions').style.display='flex';
+  }
+  render();
 }
 
 document.getElementById('pubForm').onsubmit=async e=>{
   e.preventDefault();
   if(!user)return openAuth();
-  if(!document.getElementById('fWx').files[0]&&!document.getElementById('fGroup').files[0]){alert('微信或群二维码至少上传一个');return}
+  if(!document.getElementById('fWx').value.trim()&&!document.getElementById('fGroup').files[0]){alert('微信号或群二维码至少填一个');return}
   const name=document.getElementById('fName').value.trim();
   if(['情感','沉浸','哭哭','演绎','立意','还泪'].some(k=>name.includes(k)))return alert('禁止情感类');
   const un=document.getElementById('fHost').value.trim()||user.user_metadata?.username||user.email?.split('@')[0]||'玩家';
@@ -367,10 +374,6 @@ function demoLogin(){
   alert('已进入测试模式');
 }
 
-document.getElementById('fWx').onchange=e=>{
-  const f=e.target.files[0];
-  if(f){const r=new FileReader();r.onload=()=>{document.getElementById('wxPreview').src=r.result;document.getElementById('wxPreview').style.display='block'};r.readAsDataURL(f)}
-};
 document.getElementById('fGroup').onchange=e=>{
   const f=e.target.files[0];
   if(f){const r=new FileReader();r.onload=()=>{document.getElementById('groupPreview').src=r.result;document.getElementById('groupPreview').style.display='block'};r.readAsDataURL(f)}
