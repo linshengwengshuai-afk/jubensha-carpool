@@ -108,10 +108,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 </div>
 
 <div class="wrap" id="listSection">
-  <div style="margin-bottom:12px;display:flex;gap:8px">
-    <input id="pasteInput" class="search" style="margin:0;flex:1" placeholder="快速粘贴剧本名/地点...">
-    <button class="btn" onclick="quickPaste()" style="white-space:nowrap">粘贴</button>
-  </div>
   <input class="search" id="searchInput" placeholder="搜索剧本或地点" oninput="render()">
   <div class="filters">
     <span class="f on" onclick="setF('全部',this)">全部</span>
@@ -145,7 +141,12 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
   <div class="modal-box">
     <h3>发起拼车</h3>
     <form id="pubForm">
-      <div class="field"><label>剧本</label><input id="fName" required></div>
+      <div class="field">
+        <label>剧本</label>
+        <input id="fName" required>
+        <p style="font-size:11px;color:#666;margin-top:4px">示例：狗岛谋杀循环。地点：炸蛋推理社</p>
+        <button type="button" class="btn-o" style="margin-top:6px;font-size:12px" onclick="pasteSample()">粘贴示例填充</button>
+      </div>
       <div class="field"><label>时间</label><input id="fTime" required placeholder="今晚 19:00"></div>
       <div class="field"><label>地点</label><input id="fLoc" required></div>
       <div class="row">
@@ -216,7 +217,7 @@ document.getElementById('authForm').onsubmit=async e=>{
   const u=document.getElementById('authUser').value.trim();
   const p=document.getElementById('authPass').value;
   if(u.length<2||p.length<6){document.getElementById('authTip').innerText='账号≥2，密码≥6';return}
-  const email=u+'@carpool.local';
+  const email=u+'@example.com';
   const btn=document.getElementById('authBtn');
   btn.disabled=true;btn.innerText='...';
   let err;
@@ -318,12 +319,9 @@ document.getElementById('pubForm').onsubmit=async e=>{
   load();
 };
 
-function quickPaste(){
-  const v=document.getElementById('pasteInput').value.trim();
-  if(!v)return;
-  document.getElementById('searchInput').value=v;
-  render();
-  document.getElementById('pasteInput').value='';
+function pasteSample(){
+  document.getElementById('fName').value='狗岛谋杀循环';
+  document.getElementById('fLoc').value='炸蛋推理社';
 }
 
 function demoLogin(){
