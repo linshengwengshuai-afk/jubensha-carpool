@@ -271,31 +271,53 @@ function render(){
   let list=cars;
   if(page==='my'){
     if(!user){document.getElementById('list').innerHTML='<div class="empty">请先登录</div>';return}
-    list=list.filter(c=>c.creator_id===user.id);
   }
   list=list.filter(c=>{
     const t=((c.script_name||'')+(c.location||'')+(c.host||'')).toLowerCase();
     return(!q||t.includes(q))&&(filter==='全部'||(c.tags||[]).some(x=>String(x).includes(filter)));
   });
   const el=document.getElementById('list');
-  el.innerHTML=list.length?'':'<div class="empty">暂无拼车</div>';
-  list.forEach(c=>{
-    const need=Math.max(0,(c.total_count||0)-(c.current_count||0));
-    const mine=user&&c.creator_id===user.id;
-    const d=document.createElement('div');
-    d.className='card';
-    d.innerHTML=`
-      <div class="card-title">${c.script_name||'未命名'}</div>
-      <div class="card-row">\1f551 ${c.game_time||'-'}</div>
-      <div class="card-row">\1f4cd ${c.location||'-'}</div>
-      <div class="card-row">${c.price?'￥'+c.price+' · ':''}${c.host||'车头'}</div>
-      <div class="card-bottom">
-        <span class="need">${need>0?'还缺 '+need+' 人':'已满'}</span>
-        ${page==='my'?'<button class="btn-o" onclick="del('+c.id+')">删除</button>':(need>0&&!mine?'<button class="btn" onclick="join('+c.id+')">上车</button>':'')}
-      </div>
-    `;
-    el.appendChild(d);
-  });
+  if(page==='my'){
+    const created = list.filter(c => user && c.creator_id === user.id);
+    const joined = list.filter(c => user && c.creator_id !== user.id);
+    el.innerHTML = '';
+    if(created.length){
+      const h=document.createElement('div');
+      h.style.cssText='font-size:15px;font-weight:600;margin:20px 0 10px;color:#4ade80';
+      h.innerText='我组的车';
+      el.appendChild(h);
+      created.forEach(c => el.appendChild(makeCard(c)));
+    }
+    if(joined.length){
+      const h=document.createElement('div');
+      h.style.cssText='font-size:15px;font-weight:600;margin:20px 0 10px;color:#888';
+      h.innerText='我上的车';
+      el.appendChild(h);
+      joined.forEach(c => el.appendChild(makeCard(c)));
+    }
+    if(!created.length && !joined.length) el.innerHTML='<div class="empty">暂无拼车</div>';
+  }else{
+    el.innerHTML=list.length?'':'<div class="empty">暂无拼车</div>';
+    list.forEach(c => el.appendChild(makeCard(c)));
+  }
+}
+
+function makeCard(c){
+  const need=Math.max(0,(c.total_count||0)-(c.current_count||0));
+  const mine=user&&c.creator_id===user.id;
+  const d=document.createElement('div');
+  d.className='card';
+  d.innerHTML=`
+    <div class="card-title">${c.script_name||'未命名'}</div>
+    <div class="card-row">\1f551 ${c.game_time||'-'}</div>
+    <div class="card-row">\1f4cd ${c.location||'-'}</div>
+    <div class="card-row">${c.price?'￥'+c.price+' · ':''}${c.host||'车头'}</div>
+    <div class="card-bottom">
+      <span class="need">${need>0?'还缺 '+need+' 人':'已满'}</span>
+      ${page==='my'&&mine?'<button class="btn-o" onclick="del('+c.id+')">删除</button>':(need>0&&!mine?'<button class="btn" onclick="join('+c.id+')">上车</button>':'')}
+    </div>
+  `;
+  return d;
 }
 
 function join(id){
@@ -337,7 +359,7 @@ function go(p){
       myHero=document.createElement('div');
       myHero.id='myHero';
       myHero.className='my-hero';
-      myHero.innerHTML='<div class="detective-badge">🔍 侦探档案</div><h2>我的拼车</h2><p style="color:#888;font-size:14px">管理你发起的局</p><div class="my-stats"><div class="my-stat"><div class="num" id="myCount">0</div><div class="label">发起</div></div><div class="my-stat"><div class="num" id="myJoin">0</div><div class="label">参与</div></div></div>';
+      myHero.innerHTML='<div class="detective-badge">🔍 侦探档案</div><h2>我的拼车</h2><p style="color:#888;font-size:14px">管理你的局</p>';
       document.querySelector('.wrap').insertBefore(myHero,document.querySelector('.wrap').firstChild);
     }
     myHero.style.display='block';
