@@ -22,8 +22,8 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .top-tabs{display:flex;gap:16px;margin-left:24px}
 .top-tabs button{background:none;border:none;color:var(--sub);font-size:14px;font-weight:500;cursor:pointer;padding:4px 0;border-bottom:2px solid transparent}
 .top-tabs button.on{color:var(--text);border-bottom-color:var(--accent)}
-.notice{background:#1a1a1a;border:1px solid #333;border-left:3px solid #f59e0b;padding:12px 16px;margin:16px 20px 0;border-radius:6px;font-size:13px;color:#ccc}
-.notice strong{color:#f59e0b}
+.notice{background:linear-gradient(135deg,#1a1a1a 0%,#222 100%);border:1px solid #333;padding:16px 20px;margin:20px auto;max-width:720px;border-radius:10px;font-size:14px;color:#ccc;line-height:1.7;text-align:center}
+.notice strong{color:#4ade80;font-weight:600}
 .hero{padding:40px 20px 40px;text-align:center;max-width:600px;margin:0 auto}
 .hero h2{font-size:32px;font-weight:700;letter-spacing:-1px;margin-bottom:12px}
 .hero p{color:var(--sub);font-size:15px;line-height:1.6}
@@ -84,7 +84,9 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 </nav>
 
 <div class="notice">
-  <strong>公告</strong>：本站禁止情感本、沉浸本、哭哭本。仅限推理、机制、恐怖、欢乐类剧本。
+  <strong>欢迎来到深圳推理群专属拼车小站！</strong><br>
+  这里专为本地推理爱好者设计，仅开放给深圳推理群的伙伴们使用～<br>
+  温馨提示：本平台暂不支持情感向剧本的组队需求，感谢您的理解与支持！
 </div>
 
 <div class="hero">
@@ -106,6 +108,10 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 </div>
 
 <div class="wrap" id="listSection">
+  <div style="margin-bottom:12px;display:flex;gap:8px">
+    <input id="pasteInput" class="search" style="margin:0;flex:1" placeholder="快速粘贴剧本名/地点...">
+    <button class="btn" onclick="quickPaste()" style="white-space:nowrap">粘贴</button>
+  </div>
   <input class="search" id="searchInput" placeholder="搜索剧本或地点" oninput="render()">
   <div class="filters">
     <span class="f on" onclick="setF('全部',this)">全部</span>
@@ -310,6 +316,14 @@ document.getElementById('pubForm').onsubmit=async e=>{
   showList('carpool');
   load();
 };
+
+function quickPaste(){
+  const v=document.getElementById('pasteInput').value.trim();
+  if(!v)return;
+  document.getElementById('searchInput').value=v;
+  render();
+  document.getElementById('pasteInput').value='';
+}
 
 window.addEventListener('DOMContentLoaded',init);
 </script>
