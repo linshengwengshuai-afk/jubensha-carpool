@@ -16,7 +16,7 @@ body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgb
 .nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .nav-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--sub);padding:6px 12px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer}
 .nav-btn.active,.nav-btn:hover{background:linear-gradient(135deg,rgba(229,169,60,.2),rgba(229,169,60,.05));border-color:var(--gold);color:var(--gold-l)}
-.user-tag{background:rgba(229,169,60,.15);border:1px solid var(--gold);color:var(--gold-l);padding:5px 10px;border-radius:16px;font-size:12px}
+.user-tag{background:rgba(229,169,60,.15);border:1px solid var(--gold);color:var(--gold-l);padding:5px 10px;border-radius:16px;font-size:12px;cursor:pointer}
 .main{width:100%;max-width:1100px;padding:14px;flex:1}
 .announce{background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(229,169,60,.08));border:1px solid rgba(239,68,68,.35);border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px}
 .search{width:100%;height:38px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.12);border-radius:19px;padding:0 14px;color:#fff;margin-bottom:8px}
@@ -28,11 +28,13 @@ body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgb
 .title{font-size:16px;font-weight:700;margin-bottom:6px}
 .meta{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:8px}
 .btn{background:linear-gradient(135deg,#e5a93c,#d97706);color:#0b0c10;border:none;padding:6px 12px;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-ghost{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--sub);padding:6px 12px;border-radius:14px;font-size:12px;cursor:pointer}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
-.modal-card{background:#191a26;border:1px solid var(--border);border-radius:16px;padding:20px;width:100%;max-width:340px}
+.modal-card{background:#191a26;border:1px solid var(--border);border-radius:16px;padding:20px;width:100%;max-width:360px}
 .form-group{margin-bottom:10px}
 .form-group label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
 .form-group input{width:100%;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);color:#fff;height:38px;border-radius:8px;padding:0 10px}
+.tip{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.5}
 @media(max-width:700px){.header-inner{flex-direction:column}.nav{justify-content:center}.grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -41,13 +43,14 @@ body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgb
   <div class="header-inner">
     <div onclick="switchTab('square')" style="cursor:pointer">
       <div class="logo-title">剧本杀拼车助手</div>
-      <div class="logo-sub">微信直接用 · 不用登录</div>
+      <div class="logo-sub">微信直接用 · 可绑定账号</div>
     </div>
     <nav class="nav">
       <button class="nav-btn active" id="tabSquare" onclick="switchTab('square')">拼车广场</button>
       <button class="nav-btn" id="tabMy" onclick="switchTab('my')">我的拼车</button>
       <button class="nav-btn" id="tabPub" onclick="switchTab('pub')">发起拼车</button>
       <span class="user-tag" id="userTag" onclick="setNickname()">设置昵称</span>
+      <span class="user-tag" id="bindTag" onclick="openBind()" style="background:rgba(16,185,129,.15);border-color:#10b981;color:#6ee7b7">绑定账号</span>
     </nav>
   </div>
 </header>
@@ -88,9 +91,23 @@ body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgb
 <div id="nickModal" class="modal" style="display:none">
   <div class="modal-card">
     <h3 style="color:var(--gold-l);margin-bottom:10px">设置你的昵称</h3>
-    <p style="font-size:12px;color:var(--sub);margin-bottom:10px">微信里直接用，不用登录、不用收邮件。</p>
+    <p style="font-size:12px;color:var(--sub);margin-bottom:10px">微信里直接用。绑定账号后，换设备也能找回。</p>
     <input id="nickInput" placeholder="例如：侦探小李" style="width:100%;height:38px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);color:#fff;border-radius:8px;padding:0 10px;margin-bottom:12px">
     <button class="btn" style="width:100%" onclick="saveNick()">确定</button>
+  </div>
+</div>
+
+<div id="bindModal" class="modal" style="display:none">
+  <div class="modal-card">
+    <h3 style="color:var(--gold-l);margin-bottom:10px" id="bindTitle">绑定账号（可选）</h3>
+    <p class="tip" style="margin-bottom:12px">绑定后换手机、清缓存也能找回你的拼车记录。不用绑也能正常用。</p>
+    <form id="bindForm">
+      <div class="form-group"><label>邮箱</label><input type="email" id="bindEmail" required placeholder="you@example.com"></div>
+      <button class="btn" style="width:100%;height:40px" type="submit" id="bindBtn">发送绑定链接</button>
+    </form>
+    <div class="tip" id="bindTip"></div>
+    <button class="btn-ghost" style="width:100%;margin-top:10px" onclick="closeBind()">取消</button>
+    <button class="btn-ghost" style="width:100%;margin-top:6px;display:none" id="logoutBtn" onclick="logout()">退出登录</button>
   </div>
 </div>
 
@@ -99,6 +116,7 @@ const SUPABASE_URL = 'https://mfdeckoqqyvihvwzukus.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGVja29xcXl2aWh2d3p1a3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Nzc2NzQsImV4cCI6MjEwMzE1MzY3NH0.MDVvtjnq99N294og4lvH2oFCHuif8pdHIEMr4EYwl9Q';
 let db, cars = [], tag = '全部', myNick = localStorage.getItem('myNick') || '';
 let myCarIds = JSON.parse(localStorage.getItem('myCarIds') || '[]');
+let currentUser = null;
 
 function setNickname() {
   document.getElementById('nickInput').value = myNick;
@@ -109,18 +127,100 @@ function saveNick() {
   localStorage.setItem('myNick', myNick);
   document.getElementById('userTag').innerText = myNick;
   document.getElementById('nickModal').style.display = 'none';
+  if (currentUser) syncToCloud();
+}
+
+function openBind() { document.getElementById('bindModal').style.display = 'flex'; updateBindUI(); }
+function closeBind() { document.getElementById('bindModal').style.display = 'none'; }
+
+function updateBindUI() {
+  const tag = document.getElementById('bindTag');
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (currentUser) {
+    tag.innerText = '已绑定';
+    tag.style.background = 'rgba(16,185,129,.25)';
+    logoutBtn.style.display = 'block';
+    document.getElementById('bindTitle').innerText = '已绑定账号';
+    document.getElementById('bindTip').innerHTML = '当前账号：' + (currentUser.email || '已登录') + '<br>换设备登录同一邮箱即可找回数据。';
+  } else {
+    tag.innerText = '绑定账号';
+    logoutBtn.style.display = 'none';
+  }
 }
 
 async function init() {
-  if (window.supabase) db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  if (!window.supabase) return alert('SDK 加载失败');
+  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const { data: { session } } = await db.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    if (currentUser.user_metadata?.nickname) myNick = currentUser.user_metadata.nickname;
+    await syncFromCloud();
+  }
+  db.auth.onAuthStateChange(async (_, s) => {
+    currentUser = s?.user || null;
+    if (currentUser) {
+      if (currentUser.user_metadata?.nickname) myNick = currentUser.user_metadata.nickname;
+      await syncFromCloud();
+      await syncToCloud();
+    }
+    updateUI();
+  });
   if (!myNick) setNickname();
   else document.getElementById('userTag').innerText = myNick;
+  updateBindUI();
   loadCars();
+}
+
+function updateUI() {
+  document.getElementById('userTag').innerText = myNick || '设置昵称';
+  updateBindUI();
+}
+
+async function syncFromCloud() {
+  if (!currentUser || !db) return;
+  const { data } = await db.from('carpools').select('id').eq('creator_id', currentUser.id);
+  if (data) {
+    const cloudIds = data.map(c => c.id);
+    myCarIds = [...new Set([...myCarIds, ...cloudIds])];
+    localStorage.setItem('myCarIds', JSON.stringify(myCarIds));
+  }
+}
+
+async function syncToCloud() {
+  if (!currentUser || !db || !myNick) return;
+  await db.auth.updateUser({ data: { nickname: myNick } });
+  if (myCarIds.length) {
+    await db.from('carpools').update({ creator_id: currentUser.id }).in('id', myCarIds).is('creator_id', null);
+  }
+}
+
+document.getElementById('bindForm').onsubmit = async e => {
+  e.preventDefault();
+  const email = document.getElementById('bindEmail').value.trim();
+  const btn = document.getElementById('bindBtn');
+  btn.disabled = true; btn.innerText = '发送中...';
+  const { error } = await db.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.href.split('?')[0] }
+  });
+  btn.disabled = false; btn.innerText = '发送绑定链接';
+  if (error) return document.getElementById('bindTip').innerText = '发送失败：' + error.message;
+  document.getElementById('bindTip').innerHTML = '✅ 绑定链接已发送<br>请打开邮件点击链接完成绑定（之后数据会自动同步）';
+};
+
+async function logout() {
+  await db.auth.signOut();
+  currentUser = null;
+  updateBindUI();
+  closeBind();
+  alert('已退出，本地昵称仍保留');
 }
 
 async function loadCars() {
   if (!db) return;
-  const { data } = await db.from('carpools').select('*').order('id', { ascending: false });
+  const { data, error } = await db.from('carpools').select('*').order('id', { ascending: false });
+  if (error) { console.error(error); return; }
   cars = data || [];
   renderSquare();
   renderMy();
@@ -136,7 +236,7 @@ function renderSquare() {
   el.innerHTML = list.length ? '' : '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">暂无拼车</div>';
   list.forEach(c => {
     const diff = (c.total_count||0) - (c.current_count||0);
-    const isMine = myCarIds.includes(c.id);
+    const isMine = myCarIds.includes(c.id) || (currentUser && c.creator_id === currentUser.id);
     const div = document.createElement('div');
     div.className = 'card';
     div.innerHTML = `
@@ -153,8 +253,8 @@ function renderSquare() {
 
 function renderMy() {
   const el = document.getElementById('myList');
-  const mine = cars.filter(c => myCarIds.includes(c.id));
-  el.innerHTML = mine.length ? '' : '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">还没有发起或加入的拼车</div>';
+  const mine = cars.filter(c => myCarIds.includes(c.id) || (currentUser && c.creator_id === currentUser.id));
+  el.innerHTML = mine.length ? '' : '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">还没有发起或加入的拼车<br><span style="font-size:12px">绑定账号后换设备也能找回</span></div>';
   mine.forEach(c => {
     const div = document.createElement('div');
     div.className = 'card';
@@ -170,6 +270,7 @@ function join(id) {
     localStorage.setItem('myCarIds', JSON.stringify(myCarIds));
   }
   alert('已上车！昵称：' + myNick);
+  if (currentUser) syncToCloud();
   renderSquare();
   renderMy();
 }
@@ -204,7 +305,8 @@ document.getElementById('pubForm').onsubmit = async e => {
     host: myNick,
     contact: document.getElementById('fContact').value.trim() || '车头未留',
     tags: document.getElementById('fTags').value.trim().split(/\s+/).filter(Boolean),
-    members: [{ name: myNick, isHost: true }]
+    members: [{ name: myNick, isHost: true }],
+    creator_id: currentUser ? currentUser.id : null
   };
   const { data, error } = await db.from('carpools').insert([payload]).select();
   if (error) return alert('发布失败：' + error.message);
