@@ -29,7 +29,7 @@ body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgb
 .meta{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:8px}
 .btn{background:linear-gradient(135deg,#e5a93c,#d97706);color:#0b0c10;border:none;padding:6px 12px;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer}
 .btn-ghost{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--sub);padding:6px 12px;border-radius:14px;font-size:12px;cursor:pointer}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
 .modal-card{background:#191a26;border:1px solid var(--border);border-radius:16px;padding:20px;width:100%;max-width:360px}
 .form-group{margin-bottom:10px}
 .form-group label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
@@ -43,14 +43,13 @@ body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgb
   <div class="header-inner">
     <div onclick="switchTab('square')" style="cursor:pointer">
       <div class="logo-title">剧本杀拼车助手</div>
-      <div class="logo-sub">微信直接用 · 可绑定账号</div>
+      <div class="logo-sub">账号密码登录 · 数据不丢</div>
     </div>
     <nav class="nav">
       <button class="nav-btn active" id="tabSquare" onclick="switchTab('square')">拼车广场</button>
       <button class="nav-btn" id="tabMy" onclick="switchTab('my')">我的拼车</button>
       <button class="nav-btn" id="tabPub" onclick="switchTab('pub')">发起拼车</button>
-      <span class="user-tag" id="userTag" onclick="setNickname()">设置昵称</span>
-      <span class="user-tag" id="bindTag" onclick="openBind()" style="background:rgba(16,185,129,.15);border-color:#10b981;color:#6ee7b7">绑定账号</span>
+      <span class="user-tag" id="userTag" onclick="openAuth()">登录 / 注册</span>
     </nav>
   </div>
 </header>
@@ -88,62 +87,51 @@ body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgb
   </section>
 </main>
 
-<div id="nickModal" class="modal" style="display:none">
+<div id="authModal" class="modal" style="display:none">
   <div class="modal-card">
-    <h3 style="color:var(--gold-l);margin-bottom:10px">设置你的昵称</h3>
-    <p style="font-size:12px;color:var(--sub);margin-bottom:10px">微信里直接用。绑定账号后，换设备也能找回。</p>
-    <input id="nickInput" placeholder="例如：侦探小李" style="width:100%;height:38px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);color:#fff;border-radius:8px;padding:0 10px;margin-bottom:12px">
-    <button class="btn" style="width:100%" onclick="saveNick()">确定</button>
-  </div>
-</div>
-
-<div id="bindModal" class="modal" style="display:none">
-  <div class="modal-card">
-    <h3 style="color:var(--gold-l);margin-bottom:10px" id="bindTitle">绑定账号（可选）</h3>
-    <p class="tip" style="margin-bottom:12px">绑定后换手机、清缓存也能找回你的拼车记录。不用绑也能正常用。</p>
-    <form id="bindForm">
-      <div class="form-group"><label>邮箱</label><input type="email" id="bindEmail" required placeholder="you@example.com"></div>
-      <button class="btn" style="width:100%;height:40px" type="submit" id="bindBtn">发送绑定链接</button>
+    <h3 style="color:var(--gold-l);margin-bottom:10px" id="authTitle">登录 / 注册</h3>
+    <p class="tip" style="margin-bottom:12px">用账号+密码即可。注册后请记住，换设备登录同一账号就能找回数据。</p>
+    <form id="authForm">
+      <div class="form-group"><label>账号</label><input id="authUser" required placeholder="例如：detective123"></div>
+      <div class="form-group"><label>密码</label><input type="password" id="authPass" required placeholder="至少6位"></div>
+      <button class="btn" style="width:100%;height:40px" type="submit" id="authBtn">登录</button>
     </form>
-    <div class="tip" id="bindTip"></div>
-    <button class="btn-ghost" style="width:100%;margin-top:10px" onclick="closeBind()">取消</button>
-    <button class="btn-ghost" style="width:100%;margin-top:6px;display:none" id="logoutBtn" onclick="logout()">退出登录</button>
+    <div class="tip" id="authTip"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn-ghost" style="flex:1" onclick="toggleMode()">切换到注册</button>
+      <button class="btn-ghost" style="flex:1" onclick="closeAuth()">取消</button>
+    </div>
+    <button class="btn-ghost" style="width:100%;margin-top:8px;display:none" id="logoutBtn" onclick="logout()">退出登录</button>
   </div>
 </div>
 
 <script>
 const SUPABASE_URL = 'https://mfdeckoqqyvihvwzukus.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGVja29xcXl2aWh2d3p1a3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Nzc2NzQsImV4cCI6MjEwMzE1MzY3NH0.MDVvtjnq99N294og4lvH2oFCHuif8pdHIEMr4EYwl9Q';
-let db, cars = [], tag = '全部', myNick = localStorage.getItem('myNick') || '';
-let myCarIds = JSON.parse(localStorage.getItem('myCarIds') || '[]');
-let currentUser = null;
+let db, cars = [], tag = '全部', currentUser = null, isRegister = false;
 
-function setNickname() {
-  document.getElementById('nickInput').value = myNick;
-  document.getElementById('nickModal').style.display = 'flex';
-}
-function saveNick() {
-  myNick = document.getElementById('nickInput').value.trim() || '匿名玩家';
-  localStorage.setItem('myNick', myNick);
-  document.getElementById('userTag').innerText = myNick;
-  document.getElementById('nickModal').style.display = 'none';
-  if (currentUser) syncToCloud();
+function openAuth() { document.getElementById('authModal').style.display = 'flex'; updateAuthUI(); }
+function closeAuth() { document.getElementById('authModal').style.display = 'none'; }
+
+function toggleMode() {
+  isRegister = !isRegister;
+  document.getElementById('authBtn').innerText = isRegister ? '注册' : '登录';
+  document.getElementById('authTitle').innerText = isRegister ? '注册账号' : '登录';
+  document.querySelector('#authForm + .tip + div button').innerText = isRegister ? '切换到登录' : '切换到注册';
+  document.getElementById('authTip').innerText = '';
 }
 
-function openBind() { document.getElementById('bindModal').style.display = 'flex'; updateBindUI(); }
-function closeBind() { document.getElementById('bindModal').style.display = 'none'; }
-
-function updateBindUI() {
-  const tag = document.getElementById('bindTag');
+function updateAuthUI() {
+  const tag = document.getElementById('userTag');
   const logoutBtn = document.getElementById('logoutBtn');
   if (currentUser) {
-    tag.innerText = '已绑定';
-    tag.style.background = 'rgba(16,185,129,.25)';
+    const username = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || '已登录';
+    tag.innerText = username;
     logoutBtn.style.display = 'block';
-    document.getElementById('bindTitle').innerText = '已绑定账号';
-    document.getElementById('bindTip').innerHTML = '当前账号：' + (currentUser.email || '已登录') + '<br>换设备登录同一邮箱即可找回数据。';
+    document.getElementById('authTitle').innerText = '已登录';
+    document.getElementById('authTip').innerHTML = '账号：' + username + '<br>换设备用同一账号密码即可找回数据。';
   } else {
-    tag.innerText = '绑定账号';
+    tag.innerText = '登录 / 注册';
     logoutBtn.style.display = 'none';
   }
 }
@@ -152,69 +140,53 @@ async function init() {
   if (!window.supabase) return alert('SDK 加载失败');
   db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const { data: { session } } = await db.auth.getSession();
-  if (session) {
-    currentUser = session.user;
-    if (currentUser.user_metadata?.nickname) myNick = currentUser.user_metadata.nickname;
-    await syncFromCloud();
-  }
-  db.auth.onAuthStateChange(async (_, s) => {
+  if (session) currentUser = session.user;
+  db.auth.onAuthStateChange((_, s) => {
     currentUser = s?.user || null;
-    if (currentUser) {
-      if (currentUser.user_metadata?.nickname) myNick = currentUser.user_metadata.nickname;
-      await syncFromCloud();
-      await syncToCloud();
-    }
-    updateUI();
+    updateAuthUI();
+    if (currentUser) loadCars();
   });
-  if (!myNick) setNickname();
-  else document.getElementById('userTag').innerText = myNick;
-  updateBindUI();
+  updateAuthUI();
   loadCars();
 }
 
-function updateUI() {
-  document.getElementById('userTag').innerText = myNick || '设置昵称';
-  updateBindUI();
-}
-
-async function syncFromCloud() {
-  if (!currentUser || !db) return;
-  const { data } = await db.from('carpools').select('id').eq('creator_id', currentUser.id);
-  if (data) {
-    const cloudIds = data.map(c => c.id);
-    myCarIds = [...new Set([...myCarIds, ...cloudIds])];
-    localStorage.setItem('myCarIds', JSON.stringify(myCarIds));
-  }
-}
-
-async function syncToCloud() {
-  if (!currentUser || !db || !myNick) return;
-  await db.auth.updateUser({ data: { nickname: myNick } });
-  if (myCarIds.length) {
-    await db.from('carpools').update({ creator_id: currentUser.id }).in('id', myCarIds).is('creator_id', null);
-  }
-}
-
-document.getElementById('bindForm').onsubmit = async e => {
+document.getElementById('authForm').onsubmit = async e => {
   e.preventDefault();
-  const email = document.getElementById('bindEmail').value.trim();
-  const btn = document.getElementById('bindBtn');
-  btn.disabled = true; btn.innerText = '发送中...';
-  const { error } = await db.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.href.split('?')[0] }
-  });
-  btn.disabled = false; btn.innerText = '发送绑定链接';
-  if (error) return document.getElementById('bindTip').innerText = '发送失败：' + error.message;
-  document.getElementById('bindTip').innerHTML = '✅ 绑定链接已发送<br>请打开邮件点击链接完成绑定（之后数据会自动同步）';
+  const username = document.getElementById('authUser').value.trim();
+  const password = document.getElementById('authPass').value;
+  if (username.length < 2 || password.length < 6) {
+    document.getElementById('authTip').innerText = '账号至少2位，密码至少6位';
+    return;
+  }
+  const email = username + '@carpool.local';
+  const btn = document.getElementById('authBtn');
+  btn.disabled = true; btn.innerText = '处理中...';
+  let error;
+  if (isRegister) {
+    const { error: err } = await db.auth.signUp({
+      email,
+      password,
+      options: { data: { username } }
+    });
+    error = err;
+  } else {
+    const { error: err } = await db.auth.signInWithPassword({ email, password });
+    error = err;
+  }
+  btn.disabled = false; btn.innerText = isRegister ? '注册' : '登录';
+  if (error) {
+    document.getElementById('authTip').innerText = (isRegister ? '注册' : '登录') + '失败：' + error.message;
+    return;
+  }
+  document.getElementById('authTip').innerText = isRegister ? '注册成功，请记住账号密码' : '登录成功';
+  setTimeout(closeAuth, 800);
 };
 
 async function logout() {
   await db.auth.signOut();
   currentUser = null;
-  updateBindUI();
-  closeBind();
-  alert('已退出，本地昵称仍保留');
+  updateAuthUI();
+  closeAuth();
 }
 
 async function loadCars() {
@@ -236,7 +208,7 @@ function renderSquare() {
   el.innerHTML = list.length ? '' : '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">暂无拼车</div>';
   list.forEach(c => {
     const diff = (c.total_count||0) - (c.current_count||0);
-    const isMine = myCarIds.includes(c.id) || (currentUser && c.creator_id === currentUser.id);
+    const isMine = currentUser && c.creator_id === currentUser.id;
     const div = document.createElement('div');
     div.className = 'card';
     div.innerHTML = `
@@ -253,8 +225,12 @@ function renderSquare() {
 
 function renderMy() {
   const el = document.getElementById('myList');
-  const mine = cars.filter(c => myCarIds.includes(c.id) || (currentUser && c.creator_id === currentUser.id));
-  el.innerHTML = mine.length ? '' : '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">还没有发起或加入的拼车<br><span style="font-size:12px">绑定账号后换设备也能找回</span></div>';
+  if (!currentUser) {
+    el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">请先登录查看我的拼车</div>';
+    return;
+  }
+  const mine = cars.filter(c => c.creator_id === currentUser.id);
+  el.innerHTML = mine.length ? '' : '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">还没有发起的拼车</div>';
   mine.forEach(c => {
     const div = document.createElement('div');
     div.className = 'card';
@@ -264,15 +240,9 @@ function renderMy() {
 }
 
 function join(id) {
-  if (!myNick) return setNickname();
-  if (!myCarIds.includes(id)) {
-    myCarIds.push(id);
-    localStorage.setItem('myCarIds', JSON.stringify(myCarIds));
-  }
-  alert('已上车！昵称：' + myNick);
-  if (currentUser) syncToCloud();
+  if (!currentUser) return openAuth();
+  alert('已上车！');
   renderSquare();
-  renderMy();
 }
 
 function setTag(t, el) {
@@ -292,9 +262,10 @@ function switchTab(name) {
 
 document.getElementById('pubForm').onsubmit = async e => {
   e.preventDefault();
-  if (!myNick) return setNickname();
+  if (!currentUser) return openAuth();
   const name = document.getElementById('fName').value.trim();
   if (['情感','沉浸','哭哭','演绎','立意','还泪'].some(k => name.includes(k))) return alert('禁止发布情感类');
+  const username = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || '玩家';
   const payload = {
     script_name: name,
     game_time: document.getElementById('fTime').value.trim(),
@@ -302,18 +273,14 @@ document.getElementById('pubForm').onsubmit = async e => {
     total_count: +document.getElementById('fTotal').value,
     current_count: +document.getElementById('fCur').value,
     price: document.getElementById('fPrice').value.trim(),
-    host: myNick,
+    host: username,
     contact: document.getElementById('fContact').value.trim() || '车头未留',
     tags: document.getElementById('fTags').value.trim().split(/\s+/).filter(Boolean),
-    members: [{ name: myNick, isHost: true }],
-    creator_id: currentUser ? currentUser.id : null
+    members: [{ name: username, isHost: true }],
+    creator_id: currentUser.id
   };
   const { data, error } = await db.from('carpools').insert([payload]).select();
   if (error) return alert('发布失败：' + error.message);
-  if (data && data[0]) {
-    myCarIds.push(data[0].id);
-    localStorage.setItem('myCarIds', JSON.stringify(myCarIds));
-  }
   alert('发布成功！');
   document.getElementById('pubForm').reset();
   switchTab('my');
