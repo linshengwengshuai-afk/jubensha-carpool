@@ -58,6 +58,13 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .row .field{flex:1}
 .empty{text-align:center;padding:40px;color:var(--sub)}
 #listSection{display:none}
+.my-hero{text-align:center;padding:30px 20px;background:linear-gradient(180deg,#1a1a1a 0%,#0d0d0d 100%);border-radius:12px;margin-bottom:20px}
+.my-hero h2{font-size:28px;margin-bottom:8px}
+.my-stats{display:flex;justify-content:center;gap:30px;margin-top:16px}
+.my-stat{text-align:center}
+.my-stat .num{font-size:24px;font-weight:700;color:var(--accent)}
+.my-stat .label{font-size:12px;color:var(--sub)}
+.detective-badge{display:inline-block;background:#2a2a2a;padding:4px 12px;border-radius:20px;font-size:12px;color:#888;margin-bottom:10px}
 
 @media(min-width:600px){
   .hero h2{font-size:42px}
@@ -89,7 +96,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 </div>
 
 <div class="hero">
-  <h2>找到你的局</h2>
+  <h2>🔍 找到你的局</h2>
   <p>推理剧本拼车，找人组局</p>
 </div>
 
@@ -310,12 +317,28 @@ function go(p){
   document.getElementById('navSquare').classList.toggle('on',p==='square');
   document.getElementById('navMy').classList.toggle('on',p==='my');
   document.getElementById('listSection').style.display='block';
+  const hero=document.querySelector('.hero');
+  const actions=document.querySelector('.actions');
+  const notice=document.querySelector('.notice');
   if(p==='my'){
-    document.querySelector('.hero').style.display='none';
-    document.querySelector('.actions').style.display='none';
+    hero.style.display='none';
+    actions.style.display='none';
+    notice.style.display='none';
+    let myHero=document.getElementById('myHero');
+    if(!myHero){
+      myHero=document.createElement('div');
+      myHero.id='myHero';
+      myHero.className='my-hero';
+      myHero.innerHTML='<div class="detective-badge">🔍 侦探档案</div><h2>我的拼车</h2><p style="color:#888;font-size:14px">管理你发起的局</p><div class="my-stats"><div class="my-stat"><div class="num" id="myCount">0</div><div class="label">发起</div></div><div class="my-stat"><div class="num" id="myJoin">0</div><div class="label">参与</div></div></div>';
+      document.querySelector('.wrap').insertBefore(myHero,document.querySelector('.wrap').firstChild);
+    }
+    myHero.style.display='block';
   }else{
-    document.querySelector('.hero').style.display='block';
-    document.querySelector('.actions').style.display='flex';
+    hero.style.display='block';
+    actions.style.display='flex';
+    notice.style.display='block';
+    const myHero=document.getElementById('myHero');
+    if(myHero)myHero.style.display='none';
   }
   render();
 }
