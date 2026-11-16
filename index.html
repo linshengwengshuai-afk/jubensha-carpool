@@ -298,7 +298,15 @@ function render(){
   });
 }
 
-function join(id){if(!user)return openAuth();alert('已上车')}
+function join(id){
+  if(!user)return openAuth();
+  const c = cars.find(x => x.id === id);
+  if(!c) return;
+  if(c.current_count >= c.total_count){alert('已满');return}
+  c.current_count = (c.current_count || 0) + 1;
+  alert('已上车');
+  render();
+}
 async function del(id){
   if(!confirm('删除？'))return;
   await db.from('carpools').delete().eq('id',id).eq('creator_id',user.id);
