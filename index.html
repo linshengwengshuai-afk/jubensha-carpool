@@ -185,10 +185,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 <p class="square-legal" id="squareLegal"><button type="button" id="openDisclaimer">免责声明</button></p>
 
 <div class="wrap" id="listSection" style="display:none">
-  <div class="list-back" id="listBack">
-    <b>拼车中心</b>
-    <button type="button" class="btn-o" id="exitList">退出</button>
-  </div>
   <input class="search" id="searchInput" placeholder="搜索剧本或地点" oninput="render()">
   <div class="filters">
     <span class="f on" onclick="setF('全部',this)">全部</span>
@@ -198,6 +194,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <span class="f" onclick="setF('欢乐',this)">欢乐</span>
   </div>
   <div class="grid" id="list"></div>
+  <p class="square-legal" id="listDisclaimer"><button type="button" id="openDisclaimerList">免责声明</button></p>
 </div>
 
 <div class="wrap" id="calSection" style="display:none">
@@ -487,15 +484,10 @@ const fake = [
 
 function showList(){
   document.getElementById('listSection').style.display='block';
-  document.getElementById('listBack').style.display='flex';
   render();
   const el = document.getElementById('listSection');
   const top = el.getBoundingClientRect().top + window.pageYOffset - 8;
   window.scrollTo(0, top);
-}
-function exitList(){
-  document.getElementById('listSection').style.display='none';
-  window.scrollTo(0, 0);
 }
 function openDisclaimer(){ document.getElementById('legalModal').style.display='flex'; }
 function closeDisclaimer(){ document.getElementById('legalModal').style.display='none'; }
@@ -891,7 +883,7 @@ function go(p){
   document.getElementById('listSection').style.display = (p==='my' || p==='done') ? 'block' : 'none';
   document.getElementById('calSection').style.display = calOn ? 'block' : 'none';
   document.getElementById('squareLegal').style.display = p==='square' ? 'block' : 'none';
-  document.getElementById('listBack').style.display = p==='square' ? 'flex' : 'none';
+  document.getElementById('listDisclaimer').style.display = p==='square' ? 'block' : 'none';
   const hero=document.querySelector('.hero');
   const actions=document.querySelector('.actions');
   const notice=document.querySelector('.notice');
@@ -1320,8 +1312,8 @@ function renderCal() {
 }
 
 bindTap(document.getElementById('actList'), () => showList());
-bindTap(document.getElementById('exitList'), () => exitList());
 bindTap(document.getElementById('openDisclaimer'), () => openDisclaimer());
+bindTap(document.getElementById('openDisclaimerList'), () => openDisclaimer());
 bindTap(document.getElementById('closeDisclaimer'), () => closeDisclaimer());
 bindTap(document.getElementById('authClose'), () => closeAuth());
 bindTap(document.getElementById('profileExit'), () => closeProfile());
