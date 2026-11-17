@@ -69,8 +69,10 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .qr-pick{display:inline-flex;align-items:center;justify-content:center;min-width:160px;height:44px;padding:0 16px;border:1px dashed #3a3a3a;border-radius:8px;color:#ccc;font-size:13px;cursor:pointer}
 #fGroup{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
 #groupPreview{display:none;margin:10px auto 0;max-width:120px;border-radius:8px}
-.site-foot{margin-top:72px;padding:32px 20px 40px;border-top:1px solid var(--line)}
-.disclaimer{max-width:720px;margin:0 auto;text-align:left;color:#9a9a9a;font-size:13px;line-height:1.7;overflow-wrap:break-word}
+.square-legal{text-align:center;margin:4px 0 36px}
+.square-legal button{background:none;border:none;color:#8a8a8a;font-size:13px;line-height:1.7;cursor:pointer;text-decoration:underline}
+.list-back{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.disclaimer{text-align:left;color:#9a9a9a;font-size:13px;line-height:1.7;overflow-wrap:break-word}
 .disclaimer p{margin:0 0 12px}
 .disclaimer p:last-child{margin-bottom:0}
 @media(min-width:700px){
@@ -124,7 +126,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
   .actions{flex-direction:column;max-width:100%;margin-bottom:24px}
   .action{padding:16px}
   .notice{margin:12px;padding:12px 14px;font-size:13px}
-  .site-foot{margin-top:48px;padding:28px 16px 36px}
   .disclaimer{font-size:12px}
   .modal{align-items:flex-end;padding:0}
   .modal-box,.modal-box.wide{max-width:100%;width:100%;max-height:92vh;border-radius:16px 16px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
@@ -181,8 +182,13 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <span class="go">›</span>
   </button>
 </div>
+<p class="square-legal" id="squareLegal"><button type="button" id="openDisclaimer">免责声明</button></p>
 
 <div class="wrap" id="listSection" style="display:none">
+  <div class="list-back" id="listBack">
+    <b>拼车中心</b>
+    <button type="button" class="btn-o" id="exitList">退出</button>
+  </div>
   <input class="search" id="searchInput" placeholder="搜索剧本或地点" oninput="render()">
   <div class="filters">
     <span class="f on" onclick="setF('全部',this)">全部</span>
@@ -192,15 +198,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <span class="f" onclick="setF('欢乐',this)">欢乐</span>
   </div>
   <div class="grid" id="list"></div>
-  <footer class="site-foot" id="squareDisclaimer">
-    <div class="disclaimer">
-      <p>免责声明</p>
-      <p>使用本站即表示你已阅读并同意以下内容。本站是深圳推理群的拼车信息板，只帮大家发车、上车，不是组局方，也不是店家。</p>
-      <p>微信号、群二维码由用户自己填写。本站不核验真假，也不保证对方一定是本人。上车后，车友只能看到车头的微信；车头可以看到车上车友的微信。请不要把别人的微信转到本车以外的地方。线下见面、转账、爽约、纠纷，由当事人自己处理。本站不参与收款，也不承担因此产生的损失。</p>
-      <p>剧本、时间、地点、人数、费用都由发车人填写，可能有误或临时变动。开局当天 23:59（香港时间）后，该车会从站内删除。本站不保证车能拼成，也不保证每个人都会到场。</p>
-      <p>请自行判断是否参加。不要向陌生人预付大额费用，见面请选店家等公共场所。若发现诈骗、骚扰或泄露他人微信，请停止联系并自行反映。本站可以删除相关车次，但不承担赔偿。本站不承接情感向剧本。每日塔罗只是玩梗，不构成任何建议。</p>
-    </div>
-  </footer>
 </div>
 
 <div class="wrap" id="calSection" style="display:none">
@@ -235,6 +232,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <div id="loggedInActions" style="display:none">
       <button class="btn" style="width:100%;height:44px;margin-bottom:8px" onclick="openProfile()">用户中心</button>
       <button class="btn-o" style="width:100%;height:44px" onclick="logout()">退出登录</button>
+      <button class="btn-o" style="width:100%;height:44px;margin-top:8px" type="button" id="authClose">关闭</button>
     </div>
   </div>
 </div>
@@ -242,13 +240,30 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 <!-- 用户中心：改用户名 + 绑定微信号（选填） -->
 <div id="profileModal" class="modal" style="display:none">
   <div class="modal-box">
-    <h3>用户中心</h3>
+    <div class="list-back">
+      <h3 style="margin:0">用户中心</h3>
+      <button type="button" class="btn-o" id="profileExit">退出</button>
+    </div>
     <form id="profileForm">
       <div class="field"><label>用户名</label><input id="profileName" required placeholder="显示在车上的名字"></div>
       <div class="field"><label>微信号（选填）</label><input id="profileWx" placeholder="填写后上车/组局自动使用"></div>
       <button class="btn" style="width:100%;height:44px" type="button" id="profileSave">保存</button>
     </form>
-    <button class="btn-o" style="width:100%;margin-top:8px" onclick="closeProfile()">关闭</button>
+  </div>
+</div>
+
+<div id="legalModal" class="modal" style="display:none">
+  <div class="modal-box">
+    <div class="list-back">
+      <h3 style="margin:0">免责声明</h3>
+      <button type="button" class="btn-o" id="closeDisclaimer">关闭</button>
+    </div>
+    <div class="disclaimer">
+      <p>使用本站即表示你已阅读并同意以下内容。本站是深圳推理群的拼车信息板，只帮大家发车、上车，不是组局方，也不是店家。</p>
+      <p>微信号、群二维码由用户自己填写。本站不核验真假，也不保证对方一定是本人。上车后，车友只能看到车头的微信；车头可以看到车上车友的微信。请不要把别人的微信转到本车以外的地方。线下见面、转账、爽约、纠纷，由当事人自己处理。本站不参与收款，也不承担因此产生的损失。</p>
+      <p>剧本、时间、地点、人数、费用都由发车人填写，可能有误或临时变动。开局当天 23:59（香港时间）后，该车会从站内删除。本站不保证车能拼成，也不保证每个人都会到场。</p>
+      <p>请自行判断是否参加。不要向陌生人预付大额费用，见面请选店家等公共场所。若发现诈骗、骚扰或泄露他人微信，请停止联系并自行反映。本站可以删除相关车次，但不承担赔偿。本站不承接情感向剧本。每日塔罗只是玩梗，不构成任何建议。</p>
+    </div>
   </div>
 </div>
 
@@ -282,10 +297,11 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <div class="pub-grid">
       <div>
         <label style="font-size:12px;color:#888">粘贴群消息，例如：</label>
-        <textarea id="pasteArea" style="width:100%;height:160px;background:#0d0d0d;border:1px solid #2a2a2a;color:#f0f0f0;border-radius:8px;padding:10px;font-size:13px;margin-top:6px;resize:vertical" placeholder="时间：11.25 周三 14:00
-剧本：她未能歌颂的明日
-人数：=5
-地点：侦巷
+        <textarea id="pasteArea" style="width:100%;height:160px;background:#0d0d0d;border:1px solid #2a2a2a;color:#f0f0f0;border-radius:8px;padding:10px;font-size:13px;margin-top:6px;resize:vertical" placeholder="《狗岛谋杀循环》
+开局时间：2026.09.05 14:00
+地点：炸蛋推理社
+费用：98元/位
+目前人数：5=1 陈大明
 微信：wx_123456"></textarea>
         <button type="button" class="btn" style="width:100%;margin-top:8px" onclick="smartParse()">智能识别并自动填表</button>
       </div>
@@ -471,11 +487,18 @@ const fake = [
 
 function showList(){
   document.getElementById('listSection').style.display='block';
+  document.getElementById('listBack').style.display='flex';
   render();
   const el = document.getElementById('listSection');
   const top = el.getBoundingClientRect().top + window.pageYOffset - 8;
   window.scrollTo(0, top);
 }
+function exitList(){
+  document.getElementById('listSection').style.display='none';
+  window.scrollTo(0, 0);
+}
+function openDisclaimer(){ document.getElementById('legalModal').style.display='flex'; }
+function closeDisclaimer(){ document.getElementById('legalModal').style.display='none'; }
 
 function openAuth(){document.getElementById('authModal').style.display='flex';upd()}
 function closeAuth(){document.getElementById('authModal').style.display='none'}
@@ -865,10 +888,10 @@ function go(p){
   document.getElementById('navDone').classList.toggle('on',p==='done');
   document.getElementById('navCal').classList.toggle('on',p==='cal');
   const calOn = p==='cal';
-  document.getElementById('listSection').style.display = calOn ? 'none' : 'block';
+  document.getElementById('listSection').style.display = (p==='my' || p==='done') ? 'block' : 'none';
   document.getElementById('calSection').style.display = calOn ? 'block' : 'none';
-  const disc = document.getElementById('squareDisclaimer');
-  if (disc) disc.style.display = p === 'square' ? 'block' : 'none';
+  document.getElementById('squareLegal').style.display = p==='square' ? 'block' : 'none';
+  document.getElementById('listBack').style.display = p==='square' ? 'flex' : 'none';
   const hero=document.querySelector('.hero');
   const actions=document.querySelector('.actions');
   const notice=document.querySelector('.notice');
@@ -1297,6 +1320,11 @@ function renderCal() {
 }
 
 bindTap(document.getElementById('actList'), () => showList());
+bindTap(document.getElementById('exitList'), () => exitList());
+bindTap(document.getElementById('openDisclaimer'), () => openDisclaimer());
+bindTap(document.getElementById('closeDisclaimer'), () => closeDisclaimer());
+bindTap(document.getElementById('authClose'), () => closeAuth());
+bindTap(document.getElementById('profileExit'), () => closeProfile());
 bindTap(document.getElementById('actPub'), () => openPub());
 bindTap(document.getElementById('actTarot'), () => openDailyTarot());
 bindTap(document.getElementById('userTag'), () => openAuth());
