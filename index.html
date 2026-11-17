@@ -192,6 +192,15 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <span class="f" onclick="setF('欢乐',this)">欢乐</span>
   </div>
   <div class="grid" id="list"></div>
+  <footer class="site-foot" id="squareDisclaimer">
+    <div class="disclaimer">
+      <p>免责声明</p>
+      <p>使用本站即表示你已阅读并同意以下内容。本站是深圳推理群的拼车信息板，只帮大家发车、上车，不是组局方，也不是店家。</p>
+      <p>微信号、群二维码由用户自己填写。本站不核验真假，也不保证对方一定是本人。上车后，车友只能看到车头的微信；车头可以看到车上车友的微信。请不要把别人的微信转到本车以外的地方。线下见面、转账、爽约、纠纷，由当事人自己处理。本站不参与收款，也不承担因此产生的损失。</p>
+      <p>剧本、时间、地点、人数、费用都由发车人填写，可能有误或临时变动。开局当天 23:59（香港时间）后，该车会从站内删除。本站不保证车能拼成，也不保证每个人都会到场。</p>
+      <p>请自行判断是否参加。不要向陌生人预付大额费用，见面请选店家等公共场所。若发现诈骗、骚扰或泄露他人微信，请停止联系并自行反映。本站可以删除相关车次，但不承担赔偿。本站不承接情感向剧本。每日塔罗只是玩梗，不构成任何建议。</p>
+    </div>
+  </footer>
 </div>
 
 <div class="wrap" id="calSection" style="display:none">
@@ -204,16 +213,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
   <div class="cal-grid" id="calGrid"></div>
   <div id="calDayList" style="margin-top:14px"></div>
 </div>
-
-<footer class="site-foot">
-  <div class="disclaimer">
-    <p>免责声明</p>
-    <p>使用本站即表示你已阅读并同意以下内容。本站是深圳推理群的拼车信息板，只帮大家发车、上车，不是组局方，也不是店家。</p>
-    <p>微信号、群二维码由用户自己填写。本站不核验真假，也不保证对方一定是本人。上车后，车友只能看到车头的微信；车头可以看到车上车友的微信。请不要把别人的微信转到本车以外的地方。线下见面、转账、爽约、纠纷，由当事人自己处理。本站不参与收款，也不承担因此产生的损失。</p>
-    <p>剧本、时间、地点、人数、费用都由发车人填写，可能有误或临时变动。开局当天 23:59（香港时间）后，该车会从站内删除。本站不保证车能拼成，也不保证每个人都会到场。</p>
-    <p>请自行判断是否参加。不要向陌生人预付大额费用，见面请选店家等公共场所。若发现诈骗、骚扰或泄露他人微信，请停止联系并自行反映。本站可以删除相关车次，但不承担赔偿。本站不承接情感向剧本。每日塔罗只是玩梗，不构成任何建议。</p>
-  </div>
-</footer>
 
 <!-- 登录/注册 -->
 <div id="authModal" class="modal" style="display:none">
@@ -868,6 +867,8 @@ function go(p){
   const calOn = p==='cal';
   document.getElementById('listSection').style.display = calOn ? 'none' : 'block';
   document.getElementById('calSection').style.display = calOn ? 'block' : 'none';
+  const disc = document.getElementById('squareDisclaimer');
+  if (disc) disc.style.display = p === 'square' ? 'block' : 'none';
   const hero=document.querySelector('.hero');
   const actions=document.querySelector('.actions');
   const notice=document.querySelector('.notice');
