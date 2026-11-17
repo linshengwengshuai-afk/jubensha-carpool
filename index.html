@@ -82,14 +82,26 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .shop-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
 .shop-card b{font-size:15px}
 .shop-meta{color:var(--sub);font-size:12px;margin-top:4px;line-height:1.5}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-head b{font-size:16px}
+.cal-head button{background:none;border:1px solid var(--line);color:var(--text);width:36px;height:36px;border-radius:8px;font-size:18px}
+.cal-week,.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-week span{text-align:center;color:#666;font-size:12px;padding-bottom:4px}
+.cal-cell{background:#161616;border:1px solid #2a2a2a;border-radius:8px;min-height:48px;padding:4px 2px;text-align:center;color:#888;font-size:13px}
+.cal-cell.has{color:#f0f0f0}
+.cal-cell.on{border-color:#4ade80}
+.cal-cell.today .n{color:#4ade80}
+.cal-cell .n{display:block;font-weight:600}
+.cal-cell .d{display:block;font-size:10px;color:#4ade80;margin-top:2px}
 .member-list{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.6}
 .member-list .host{color:var(--accent)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#1c1c1c;border:1px solid #333;color:#ddd;padding:10px 16px;border-radius:999px;font-size:13px;z-index:400;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
 .btn:disabled{opacity:.55}
 @media(max-width:699px){
   .nav{padding:12px 14px;gap:8px}
-  .top-tabs{margin-left:0;gap:10px}
-  .top-tabs button{font-size:13px}
+  .nav h1{display:none}
+  .top-tabs{margin-left:0;gap:4px}
+  .top-tabs button{font-size:12px;padding:10px 2px}
   .nav h1{font-size:15px}
   .hero{padding:32px 16px 20px}
   .hero h2{font-size:28px}
@@ -117,6 +129,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <button class="on" id="navSquare" onclick="go('square')">广场</button>
     <button id="navMy" onclick="go('my')">我的</button>
     <button id="navDone" onclick="go('done')">拼成</button>
+    <button id="navCal" onclick="go('cal')">日历</button>
     <button id="navShops" onclick="go('shops')">店家</button>
   </div>
   <h1>拼车 <span style="color:#4ade80;font-size:12px">v4</span></h1>
@@ -161,6 +174,17 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <span class="f" onclick="setF('欢乐',this)">欢乐</span>
   </div>
   <div class="grid" id="list"></div>
+</div>
+
+<div class="wrap" id="calSection" style="display:none">
+  <div class="cal-head">
+    <button type="button" id="calPrev">‹</button>
+    <b id="calTitle"></b>
+    <button type="button" id="calNext">›</button>
+  </div>
+  <div class="cal-week"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+  <div class="cal-grid" id="calGrid"></div>
+  <div id="calDayList" style="margin-top:14px"></div>
 </div>
 
 <div class="wrap" id="shopSection" style="display:none">
@@ -653,6 +677,7 @@ async function load(silent){
   }
   cars=[...fake,...(Array.isArray(data)?data:(data||[]))];
   render();
+  if (page==='cal') renderCal();
 }
 
 function render(){
@@ -826,10 +851,13 @@ function go(p){
   document.getElementById('navSquare').classList.toggle('on',p==='square');
   document.getElementById('navMy').classList.toggle('on',p==='my');
   document.getElementById('navDone').classList.toggle('on',p==='done');
+  document.getElementById('navCal').classList.toggle('on',p==='cal');
   document.getElementById('navShops').classList.toggle('on',p==='shops');
   const shopOn = p==='shops';
-  document.getElementById('listSection').style.display = shopOn ? 'none' : 'block';
+  const calOn = p==='cal';
+  document.getElementById('listSection').style.display = (shopOn || calOn) ? 'none' : 'block';
   document.getElementById('shopSection').style.display = shopOn ? 'block' : 'none';
+  document.getElementById('calSection').style.display = calOn ? 'block' : 'none';
   const hero=document.querySelector('.hero');
   const actions=document.querySelector('.actions');
   const notice=document.querySelector('.notice');
@@ -874,6 +902,7 @@ function go(p){
   done.style.display = p==='done' ? 'block' : 'none';
   syncDoneFilters();
   if (shopOn) { loadShops(); return; }
+  if (calOn) { renderCal(); return; }
   render();
 }
 
@@ -1312,6 +1341,78 @@ async function removeShop(id) {
   });
 }
 
+let calYear = 0, calMonth = 0, calDay = '';
+function carDateKey(c) {
+  const raw = String(c.play_date || c.game_time || '');
+  const m = raw.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
+  if (!m) return '';
+  return m[1] + '-' + m[2].padStart(2, '0') + '-' + m[3].padStart(2, '0');
+}
+function carClock(c) {
+  const m = String(c.game_time || '').match(/(\d{1,2}):(\d{2})/);
+  return m ? m[1].padStart(2, '0') + ':' + m[2] : '';
+}
+function shiftCal(delta) {
+  calMonth += delta;
+  if (calMonth < 1) { calMonth = 12; calYear -= 1; }
+  if (calMonth > 12) { calMonth = 1; calYear += 1; }
+  calDay = '';
+  renderCal();
+}
+function pickCalDay(day) {
+  calDay = day;
+  renderCal();
+}
+function renderCal() {
+  const today = hkToday();
+  if (!calYear) {
+    calYear = +today.slice(0, 4);
+    calMonth = +today.slice(5, 7);
+    calDay = today;
+  }
+  document.getElementById('calTitle').innerText = calYear + '年' + calMonth + '月';
+  const prefix = calYear + '-' + String(calMonth).padStart(2, '0') + '-';
+  const byDay = {};
+  cars.forEach((c) => {
+    if (Number(c.id) >= 9000 && !c.creator_id) return;
+    const key = carDateKey(c);
+    if (!key.startsWith(prefix)) return;
+    (byDay[key] = byDay[key] || []).push(c);
+  });
+  const first = new Date(calYear, calMonth - 1, 1);
+  const blanks = (first.getDay() + 6) % 7;
+  const days = new Date(calYear, calMonth, 0).getDate();
+  let html = '';
+  for (let i = 0; i < blanks; i++) html += '<div></div>';
+  for (let d = 1; d <= days; d++) {
+    const key = prefix + String(d).padStart(2, '0');
+    const n = (byDay[key] || []).length;
+    const cls = 'cal-cell' + (n ? ' has' : '') + (key === calDay ? ' on' : '') + (key === today ? ' today' : '');
+    html += '<button type="button" class="' + cls + '" onclick="pickCalDay(\'' + key + '\')"><span class="n">' + d + '</span>' + (n ? '<span class="d">' + n + '本</span>' : '') + '</button>';
+  }
+  document.getElementById('calGrid').innerHTML = html;
+  const list = document.getElementById('calDayList');
+  const picked = byDay[calDay] || [];
+  if (!calDay) {
+    list.innerHTML = '<div class="empty">点一天，看当天有哪些本</div>';
+    return;
+  }
+  if (!picked.length) {
+    list.innerHTML = '<div class="empty">' + calDay.slice(5) + ' 还没有车</div>';
+    return;
+  }
+  picked.sort((a, b) => carClock(a).localeCompare(carClock(b)));
+  list.innerHTML = picked.map((c) => {
+    const need = Math.max(0, (c.total_count || 0) - (c.current_count || 0));
+    return '<div class="shop-card"><b>' + esc(c.script_name) + '</b><div class="shop-meta">'
+      + esc(carClock(c) || '时间待定') + ' · ' + esc(c.location || '')
+      + '<br>' + (c.current_count || 0) + '/' + (c.total_count || 0) + ' 人'
+      + (need ? ' · 还差 ' + need : ' · 已满')
+      + (c.host ? ' · ' + esc(c.host) : '')
+      + '</div></div>';
+  }).join('');
+}
+
 bindTap(document.getElementById('actList'), () => showList());
 bindTap(document.getElementById('actPub'), () => openPub());
 bindTap(document.getElementById('actTarot'), () => openDailyTarot());
@@ -1319,6 +1420,9 @@ bindTap(document.getElementById('userTag'), () => openAuth());
 bindTap(document.getElementById('navSquare'), () => go('square'));
 bindTap(document.getElementById('navMy'), () => go('my'));
 bindTap(document.getElementById('navDone'), () => go('done'));
+bindTap(document.getElementById('navCal'), () => go('cal'));
+bindTap(document.getElementById('calPrev'), () => shiftCal(-1));
+bindTap(document.getElementById('calNext'), () => shiftCal(1));
 bindTap(document.getElementById('navShops'), () => go('shops'));
 bindTap(document.getElementById('locBtn'), () => locateMe());
 bindTap(document.getElementById('addShopBtn'), () => toggleShopForm());
@@ -1331,6 +1435,7 @@ document.getElementById('userTag').onclick = null;
 document.getElementById('navSquare').onclick = null;
 document.getElementById('navMy').onclick = null;
 document.getElementById('navDone').onclick = null;
+document.getElementById('navCal').onclick = null;
 document.getElementById('navShops').onclick = null;
 
 window.addEventListener('DOMContentLoaded',init);
