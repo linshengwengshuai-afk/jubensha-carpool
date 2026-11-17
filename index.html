@@ -235,7 +235,8 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
       </div>
       <form id="pubForm">
         <div class="field"><label>剧本名称</label><input id="fName" required placeholder="例如：狗岛谋杀循环"></div>
-        <div class="field"><label>开局时间</label><input id="fTime" required placeholder="例如：2026-09-05 14:00"></div>
+        <div class="field"><label>发车日期</label><input id="fDate" type="date" required></div>
+        <div class="field"><label>开局时间</label><input id="fTime" type="time" required></div>
         <div class="field"><label>开局地点</label><input id="fLoc" required placeholder="例如：炸蛋推理社"></div>
         <div class="row">
           <div class="field"><label>总需人数</label><input id="fTotal" type="number" required placeholder="5"></div>
@@ -254,7 +255,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
         </div>
         <p id="pubErr" style="color:#f87171;font-size:13px;min-height:18px;margin:0 0 8px"></p>
         <button class="btn" style="width:100%;height:44px" type="button" id="pubBtn">立即发布至广场</button>
-        <p style="font-size:12px;color:#888;margin-top:8px">当前已有必须小于总人数，满员的车不会出现在广场。</p>
+        <p style="font-size:12px;color:#888;margin-top:8px">发车当天 23:59 后，这辆车会自动删除。当前已有必须小于总人数，满员的车不会出现在广场。</p>
       </form>
     </div>
     <button class="btn-o" style="width:100%;margin-top:12px" onclick="closePub()">取消</button>
@@ -326,6 +327,7 @@ function friendlyError(err) {
   if (/rate limit|too many/i.test(m)) return '操作太频繁，请等一两分钟再试';
   if (/Password should be|password/i.test(m) && /6|least|short/i.test(m)) return '密码至少 6 位';
   if (/当前人数不正确/.test(m)) return '当前已有要大于 0，且不能大于总人数。满员的车不会出现在广场';
+  if (/发车日期/.test(m)) return m;
   if (/ambiguous/i.test(m)) return '数据库函数有列名冲突。请在 Supabase SQL Editor 运行最新的修复 SQL';
   if (/save_profile|my_profile/i.test(m)) return '微信号还没能存进账号。请先在 Supabase SQL Editor 运行 profiles.sql';
   if (/list_carpools|create_carpool|function public/i.test(m)) return '数据库权限还没升级。请先在 Supabase 的 SQL Editor 运行 rls.sql';
@@ -415,11 +417,15 @@ function showList(){
 
 function openAuth(){document.getElementById('authModal').style.display='flex';upd()}
 function closeAuth(){document.getElementById('authModal').style.display='none'}
+function hkToday() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Hong_Kong' }).format(new Date());
+}
 function openPub(){
   if(!user)return openAuth();
-  // 预填已保存的微信号
   const savedWx = getMyWx();
   if(savedWx) document.getElementById('fWx').value = savedWx;
+  const dateInput = document.getElementById('fDate');
+  if (dateInput) dateInput.min = hkToday();
   document.getElementById('pubModal').style.display='flex';
 }
 function closePub(){document.getElementById('pubModal').style.display='none'}
@@ -871,11 +877,13 @@ async function publishCar(){
   let wx=document.getElementById('fWx').value.trim() || getMyWx();
   if(!wx){say('请先填写微信号，或在用户中心绑定');return}
   const name=document.getElementById('fName').value.trim();
-  const time=document.getElementById('fTime').value.trim();
+  const date=document.getElementById('fDate').value;
+  const clock=document.getElementById('fTime').value;
   const loc=document.getElementById('fLoc').value.trim();
   const total=+document.getElementById('fTotal').value;
   const cur=+document.getElementById('fCur').value;
-  if(!name||!time||!loc){say('剧本、时间和地点都要填');return}
+  if(!name||!date||!clock||!loc){say('剧本、发车日期、开局时间和地点都要填');return}
+  if(date < hkToday()){say('发车日期不能是过去');return}
   if(['情感','沉浸','哭哭','演绎','立意','还泪'].some(k=>name.includes(k))){say('禁止情感类');return}
   if(!(total>=1)){say('总需人数要大于 0');return}
   if(!(cur>=1) || cur>total){say('当前已有要大于 0，且不能大于总人数');return}
@@ -883,7 +891,8 @@ async function publishCar(){
   const un = user.user_metadata?.username || user.email?.split('@')[0] || '玩家';
   const payload = {
     script_name: name,
-    game_time: time,
+    game_time: date + ' ' + clock,
+    play_date: date,
     location: loc,
     total_count: total,
     current_count: cur,
@@ -931,7 +940,14 @@ function smartParse(){
   const nameMatch=t.match(/《([^》]+)》/)||t.match(/剧本[：:]\s*([^\n]+)/);
   if(nameMatch)document.getElementById('fName').value=nameMatch[1].trim();
   const timeMatch=t.match(/时间[：:]\s*([^\n]+)/)||t.match(/开局时间[：:]\s*([^\n]+)/);
-  if(timeMatch)document.getElementById('fTime').value=timeMatch[1].trim();
+  if(timeMatch){
+    const raw=timeMatch[1].trim();
+    const m=raw.match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})(?:\s+(\d{1,2})[:：](\d{2}))?/);
+    if(m){
+      document.getElementById('fDate').value=`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+      if(m[4]) document.getElementById('fTime').value=`${m[4].padStart(2,'0')}:${m[5]}`;
+    }
+  }
   const locMatch=t.match(/地点[：:]\s*([^\n]+)/);
   if(locMatch)document.getElementById('fLoc').value=locMatch[1].trim();
   const priceMatch=t.match(/费用[：:]\s*([^\n]+)/)||t.match(/金额[：:]\s*([^\n]+)/);
