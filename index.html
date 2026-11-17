@@ -62,23 +62,24 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .row{display:flex;gap:10px}
 .row .field{flex:1}
 .empty{text-align:center;padding:60px;color:var(--sub)}
-.my-panel{margin-bottom:16px}
-.my-count{text-align:center;margin-bottom:12px;font-size:15px;color:var(--sub)}
-.my-count b{display:block;font-size:28px;line-height:1.1;color:var(--text);font-weight:700;letter-spacing:-.5px}
-.my-count b em{font-style:normal;color:var(--accent)}
-.my-filters{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-.my-filter-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.my-filter-row + .my-filter-row{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
-.my-filter-row .k{font-size:12px;color:var(--sub);width:28px;flex:none}
-.my-filter-row button{background:transparent;border:none;color:var(--sub);padding:4px 10px;border-radius:999px;font-size:12px;cursor:pointer;outline:none}
-.my-filter-row button.on{background:var(--accent);color:#000}
+.my-tabs{display:flex;gap:0;margin:0 auto 16px;justify-content:center;border-bottom:1px solid var(--line);max-width:280px}
+.my-tabs button{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--sub);padding:10px 0 8px;font-size:14px;cursor:pointer;outline:none}
+.my-tabs button.on{color:var(--text);border-bottom-color:var(--accent)}
+.done-panel{text-align:center;margin-bottom:18px}
+.done-count{font-size:13px;color:var(--sub)}
+.done-count b{display:block;font-size:40px;line-height:1.1;color:var(--text);font-weight:700;letter-spacing:-1px}
+.done-count b em{font-style:normal;color:var(--accent)}
+.done-filters{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.done-filters button{background:transparent;border:1px solid var(--line);color:var(--sub);padding:6px 14px;border-radius:999px;font-size:13px;cursor:pointer;outline:none}
+.done-filters button.on{background:var(--accent);color:#000;border-color:var(--accent)}
 .member-list{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.6}
 .member-list .host{color:var(--accent)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#1c1c1c;border:1px solid #333;color:#ddd;padding:10px 16px;border-radius:999px;font-size:13px;z-index:400;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
 .btn:disabled{opacity:.55}
 @media(max-width:699px){
   .nav{padding:12px 14px;gap:8px}
-  .top-tabs{margin-left:0;gap:12px}
+  .top-tabs{margin-left:0;gap:10px}
+  .top-tabs button{font-size:13px}
   .nav h1{font-size:15px}
   .hero{padding:32px 16px 20px}
   .hero h2{font-size:28px}
@@ -105,6 +106,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
   <div class="top-tabs">
     <button class="on" id="navSquare" onclick="go('square')">广场</button>
     <button id="navMy" onclick="go('my')">我的</button>
+    <button id="navDone" onclick="go('done')">拼成</button>
   </div>
   <h1>拼车 <span style="color:#4ade80;font-size:12px">v4</span></h1>
   <span class="user" id="userTag" onclick="openAuth()">登录</span>
@@ -257,7 +259,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 <script>
 const SUPABASE_URL = 'https://mfdeckoqqyvihvwzukus.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGVja29xcXl2aWh2d3p1a3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Nzc2NzQsImV4cCI6MjEwMzE1MzY3NH0.MDVvtjnq99N294og4lvH2oFCHuif8pdHIEMr4EYwl9Q';
-let db, cars = [], filter = '全部', user = null, isReg = false, page = 'square', myRole = 'all', myStatus = 'all';
+let db, cars = [], filter = '全部', user = null, isReg = false, page = 'square', myTab = 'joined', doneRole = 'all';
 
 // 微信号跟账号走（user_metadata.wechat），本地只做缓存
 function getMyWx() {
@@ -505,13 +507,17 @@ function render(){
   if(document.getElementById('listSection').style.display==='none')return;
   const q=(document.getElementById('searchInput').value||'').toLowerCase();
   let list=cars;
+  const minePage = page==='my' || page==='done';
   if(page==='my'){
-    if(!user){document.getElementById('list').innerHTML='<div class="empty">请先登录</div>';setMyCount(0);return}
+    if(!user){document.getElementById('list').innerHTML='<div class="empty">请先登录</div>';return}
+    list=list.filter(c=> myTab==='created' ? isMyCreated(c) : isMyJoined(c));
+    list=list.filter(c=>!isFull(c));
+  } else if(page==='done'){
+    if(!user){document.getElementById('list').innerHTML='<div class="empty">请先登录</div>';setDoneCount(0);return}
     list=list.filter(c=>isMyCreated(c)||isMyJoined(c));
-    if(myRole==='created') list=list.filter(c=>isMyCreated(c));
-    if(myRole==='joined') list=list.filter(c=>isMyJoined(c));
-    if(myStatus==='full') list=list.filter(c=>isFull(c));
-    if(myStatus==='open') list=list.filter(c=>!isFull(c));
+    list=list.filter(isFull);
+    if(doneRole==='created') list=list.filter(isMyCreated);
+    if(doneRole==='joined') list=list.filter(isMyJoined);
   } else {
     list=list.filter(c=>!isFull(c));
   }
@@ -520,8 +526,9 @@ function render(){
     return(!q||t.includes(q))&&(filter==='全部'||(c.tags||[]).some(x=>String(x).includes(filter)));
   });
   const el=document.getElementById('list');
-  if(page==='my') setMyCount(list.length);
-  el.innerHTML=list.length?'':'<div class="empty">'+(page==='my'?'这个筛选下还没有车':'暂无未满的拼车')+'</div>';
+  if(page==='done') setDoneCount(list.length);
+  const emptyText = page==='done' ? '还没有拼成的车' : page==='my' ? '暂无进行中的车' : '暂无未满的拼车';
+  el.innerHTML=list.length?'':'<div class="empty">'+emptyText+'</div>';
   list.forEach(c=>{
     const need=Math.max(0,(c.total_count||0)-(c.current_count||0));
     const mine=isMyCreated(c);
@@ -530,7 +537,7 @@ function render(){
     const d=document.createElement('div');
     d.className='card';
     let memberHtml='';
-    if(page==='my'){
+    if(minePage){
       memberHtml='<div class="member-list">';
       members.forEach((m, idx)=>{
         const showContact=mine||m.isHost;
@@ -546,17 +553,17 @@ function render(){
       <div class="card-row">🕐 ${c.game_time||'-'}</div>
       <div class="card-row">📍 ${c.location||'-'}</div>
       <div class="card-row">💰 ${c.price||'面议'} · ${c.host||'车头'}</div>
-      ${page==='my' && c.contact ? `<div class="card-row">💬 车头微信：${c.contact} <button class="btn-o" style="padding:2px 8px;font-size:11px" onclick="copyHostWx(${c.id})">复制</button></div>` : ''}
+      ${minePage && c.contact ? `<div class="card-row">💬 车头微信：${c.contact} <button class="btn-o" style="padding:2px 8px;font-size:11px" onclick="copyHostWx(${c.id})">复制</button></div>` : ''}
       ${c.qr_image ? `<div class="card-row"><button class="btn-o" style="padding:4px 10px;font-size:12px" onclick="viewQr('${c.id}')">📲 查看群二维码</button></div>` : ''}
       ${memberHtml}
       <div class="card-bottom">
         <span class="need">${need>0?'还缺 '+need+' 人':'已满'}</span>
-        ${page==='my'&&mine?`
+        ${minePage&&mine?`
           <button class="btn-o" onclick="editCount(${c.id})">改人数</button>
           <button class="btn-o" onclick="del(${c.id})">解散</button>
         `:''}
-        ${page==='my'&&joined&&!mine?`<button class="btn-o" onclick="leave(${c.id})">下车</button>`:''}
-        ${page!=='my'&&need>0&&!mine&&!joined?`<button class="btn" onclick="join(${c.id})">上车</button>`:''}
+        ${minePage&&joined&&!mine?`<button class="btn-o" onclick="leave(${c.id})">下车</button>`:''}
+        ${page==='square'&&need>0&&!mine&&!joined?`<button class="btn" onclick="join(${c.id})">上车</button>`:''}
       </div>
     `;
     el.appendChild(d);
@@ -662,76 +669,73 @@ function go(p){
   page=p;
   document.getElementById('navSquare').classList.toggle('on',p==='square');
   document.getElementById('navMy').classList.toggle('on',p==='my');
+  document.getElementById('navDone').classList.toggle('on',p==='done');
   document.getElementById('listSection').style.display='block';
   const hero=document.querySelector('.hero');
   const actions=document.querySelector('.actions');
   const notice=document.querySelector('.notice');
-  if(p==='my'){
-    hero.style.display='none';
-    actions.style.display='none';
-    notice.style.display='none';
-    let panel=document.getElementById('myPanel');
-    if(!panel){
-      panel=document.createElement('div');
-      panel.id='myPanel';
-      panel.className='my-panel';
-      panel.innerHTML=`
-        <div class="my-count" id="myCount"><b><em>0</em> 车</b>总共</div>
-        <div class="my-filters">
-          <div class="my-filter-row">
-            <span class="k">身份</span>
-            <button data-role="all" class="on" onclick="setMyRole('all')">全部</button>
-            <button data-role="created" onclick="setMyRole('created')">我组的</button>
-            <button data-role="joined" onclick="setMyRole('joined')">我上的</button>
-          </div>
-          <div class="my-filter-row">
-            <span class="k">状态</span>
-            <button data-status="all" class="on" onclick="setMyStatus('all')">全部</button>
-            <button data-status="open" onclick="setMyStatus('open')">进行中</button>
-            <button data-status="full" onclick="setMyStatus('full')">已满</button>
-          </div>
-        </div>
-      `;
-      document.querySelector('.wrap').insertBefore(panel, document.querySelector('.wrap').firstChild);
-    }
-    panel.style.display='block';
-    syncMyFilters();
-  }else{
-    hero.style.display='block';
-    actions.style.display='flex';
-    notice.style.display='block';
-    const panel=document.getElementById('myPanel');
-    if(panel)panel.style.display='none';
+  const browsing = p==='square';
+  hero.style.display = browsing ? 'block' : 'none';
+  actions.style.display = browsing ? 'flex' : 'none';
+  notice.style.display = browsing ? 'block' : 'none';
+  document.getElementById('searchInput').style.display = p==='done' ? 'none' : 'block';
+  document.querySelector('.filters').style.display = browsing ? 'flex' : 'none';
+
+  let tabs=document.getElementById('myTabs');
+  if(!tabs){
+    tabs=document.createElement('div');
+    tabs.id='myTabs';
+    tabs.className='my-tabs';
+    tabs.innerHTML=`
+      <button data-tab="joined" onclick="setMyTab('joined')">我上的车</button>
+      <button data-tab="created" onclick="setMyTab('created')">我组的车</button>
+    `;
+    document.querySelector('.wrap').insertBefore(tabs, document.querySelector('.wrap').firstChild);
   }
+  tabs.style.display = p==='my' ? 'flex' : 'none';
+  tabs.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.tab===myTab));
+
+  let done=document.getElementById('donePanel');
+  if(!done){
+    done=document.createElement('div');
+    done.id='donePanel';
+    done.className='done-panel';
+    done.innerHTML=`
+      <div class="done-count" id="doneCount"><b><em>0</em></b>总共拼成</div>
+      <div class="done-filters">
+        <button data-role="all" onclick="setDoneRole('all')">全部</button>
+        <button data-role="created" onclick="setDoneRole('created')">我组的</button>
+        <button data-role="joined" onclick="setDoneRole('joined')">我上的</button>
+      </div>
+    `;
+    document.querySelector('.wrap').insertBefore(done, document.getElementById('searchInput'));
+  }
+  done.style.display = p==='done' ? 'block' : 'none';
+  syncDoneFilters();
   render();
 }
 
-function myCountText(){
-  if(myRole==='all' && myStatus==='all') return '总共';
-  const bits=[];
-  if(myRole==='created') bits.push('我组的');
-  if(myRole==='joined') bits.push('我上的');
-  if(myStatus==='open') bits.push('进行中');
-  if(myStatus==='full') bits.push('已满');
-  return bits.join(' · ');
-}
-function setMyCount(n){
-  const el=document.getElementById('myCount');
-  if(!el) return;
-  el.innerHTML=`<b><em>${n}</em> 车</b>${myCountText()}`;
-}
-function syncMyFilters(){
-  document.querySelectorAll('#myPanel [data-role]').forEach(b=>b.classList.toggle('on', b.dataset.role===myRole));
-  document.querySelectorAll('#myPanel [data-status]').forEach(b=>b.classList.toggle('on', b.dataset.status===myStatus));
-}
-function setMyRole(role){
-  myRole=role;
-  syncMyFilters();
+function setMyTab(tab){
+  myTab=tab;
+  document.querySelectorAll('#myTabs button').forEach(b=>b.classList.toggle('on', b.dataset.tab===tab));
   render();
 }
-function setMyStatus(status){
-  myStatus=status;
-  syncMyFilters();
+function doneCountText(){
+  if(doneRole==='created') return '我组的';
+  if(doneRole==='joined') return '我上的';
+  return '总共拼成';
+}
+function setDoneCount(n){
+  const el=document.getElementById('doneCount');
+  if(!el) return;
+  el.innerHTML=`<b><em>${n}</em></b>${doneCountText()}`;
+}
+function syncDoneFilters(){
+  document.querySelectorAll('#donePanel [data-role]').forEach(b=>b.classList.toggle('on', b.dataset.role===doneRole));
+}
+function setDoneRole(role){
+  doneRole=role;
+  syncDoneFilters();
   render();
 }
 
@@ -781,8 +785,7 @@ document.getElementById('pubForm').onsubmit=async e=>{
   document.getElementById('pubForm').reset();
   document.getElementById('groupPreview').style.display = 'none';
   closePub();
-  myRole='created';
-  myStatus='all';
+  myTab='created';
   go('my');
   load();
 };
