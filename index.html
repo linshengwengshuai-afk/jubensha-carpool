@@ -62,12 +62,16 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .row{display:flex;gap:10px}
 .row .field{flex:1}
 .empty{text-align:center;padding:60px;color:var(--sub)}
-.my-subtabs{display:flex;gap:0;margin:0 auto 8px;justify-content:center;border-bottom:1px solid var(--line);max-width:280px}
-.my-subtabs button{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--sub);padding:10px 0 8px;font-size:14px;font-weight:500;cursor:pointer;outline:none}
-.my-subtabs button.on{color:var(--text);border-bottom-color:var(--accent)}
-.my-hist{display:flex;gap:0;margin:0 auto 18px;justify-content:center;background:#141414;border:1px solid var(--line);border-radius:8px;padding:3px;max-width:220px}
-.my-hist button{flex:1;background:transparent;border:none;color:var(--sub);padding:6px 0;border-radius:6px;font-size:12px;cursor:pointer;outline:none}
-.my-hist button.on{background:#222;color:var(--text)}
+.my-panel{margin-bottom:16px}
+.my-count{text-align:center;margin-bottom:12px;font-size:15px;color:var(--sub)}
+.my-count b{display:block;font-size:28px;line-height:1.1;color:var(--text);font-weight:700;letter-spacing:-.5px}
+.my-count b em{font-style:normal;color:var(--accent)}
+.my-filters{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.my-filter-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.my-filter-row + .my-filter-row{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.my-filter-row .k{font-size:12px;color:var(--sub);width:28px;flex:none}
+.my-filter-row button{background:transparent;border:none;color:var(--sub);padding:4px 10px;border-radius:999px;font-size:12px;cursor:pointer;outline:none}
+.my-filter-row button.on{background:var(--accent);color:#000}
 .member-list{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.6}
 .member-list .host{color:var(--accent)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#1c1c1c;border:1px solid #333;color:#ddd;padding:10px 16px;border-radius:999px;font-size:13px;z-index:400;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
@@ -253,7 +257,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 <script>
 const SUPABASE_URL = 'https://mfdeckoqqyvihvwzukus.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGVja29xcXl2aWh2d3p1a3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Nzc2NzQsImV4cCI6MjEwMzE1MzY3NH0.MDVvtjnq99N294og4lvH2oFCHuif8pdHIEMr4EYwl9Q';
-let db, cars = [], filter = '全部', user = null, isReg = false, page = 'square', myTab = 'joined', myFull = false;
+let db, cars = [], filter = '全部', user = null, isReg = false, page = 'square', myRole = 'all', myStatus = 'all';
 
 // 微信号跟账号走（user_metadata.wechat），本地只做缓存
 function getMyWx() {
@@ -502,13 +506,12 @@ function render(){
   const q=(document.getElementById('searchInput').value||'').toLowerCase();
   let list=cars;
   if(page==='my'){
-    if(!user){document.getElementById('list').innerHTML='<div class="empty">请先登录</div>';return}
-    if(myTab==='joined'){
-      list=list.filter(c=>isMyJoined(c));
-    }else{
-      list=list.filter(c=>isMyCreated(c));
-    }
-    list=list.filter(c=>myFull ? isFull(c) : !isFull(c));
+    if(!user){document.getElementById('list').innerHTML='<div class="empty">请先登录</div>';setMyCount(0);return}
+    list=list.filter(c=>isMyCreated(c)||isMyJoined(c));
+    if(myRole==='created') list=list.filter(c=>isMyCreated(c));
+    if(myRole==='joined') list=list.filter(c=>isMyJoined(c));
+    if(myStatus==='full') list=list.filter(c=>isFull(c));
+    if(myStatus==='open') list=list.filter(c=>!isFull(c));
   } else {
     list=list.filter(c=>!isFull(c));
   }
@@ -517,10 +520,8 @@ function render(){
     return(!q||t.includes(q))&&(filter==='全部'||(c.tags||[]).some(x=>String(x).includes(filter)));
   });
   const el=document.getElementById('list');
-  const emptyText = page==='my'
-    ? (myFull ? '还没有已满的历史车辆' : '暂无进行中的车')
-    : '暂无未满的拼车';
-  el.innerHTML=list.length?'':'<div class="empty">'+emptyText+'</div>';
+  if(page==='my') setMyCount(list.length);
+  el.innerHTML=list.length?'':'<div class="empty">'+(page==='my'?'这个筛选下还没有车':'暂无未满的拼车')+'</div>';
   list.forEach(c=>{
     const need=Math.max(0,(c.total_count||0)-(c.current_count||0));
     const mine=isMyCreated(c);
@@ -669,53 +670,68 @@ function go(p){
     hero.style.display='none';
     actions.style.display='none';
     notice.style.display='none';
-    let sub=document.getElementById('mySub');
-    if(!sub){
-      sub=document.createElement('div');
-      sub.id='mySub';
-      sub.className='my-subtabs';
-      sub.innerHTML=`
-        <button class="${myTab==='joined'?'on':''}" onclick="setMyTab('joined',this)">我上的车</button>
-        <button class="${myTab==='created'?'on':''}" onclick="setMyTab('created',this)">我组的车</button>
+    let panel=document.getElementById('myPanel');
+    if(!panel){
+      panel=document.createElement('div');
+      panel.id='myPanel';
+      panel.className='my-panel';
+      panel.innerHTML=`
+        <div class="my-count" id="myCount"><b><em>0</em> 车</b>总共</div>
+        <div class="my-filters">
+          <div class="my-filter-row">
+            <span class="k">身份</span>
+            <button data-role="all" class="on" onclick="setMyRole('all')">全部</button>
+            <button data-role="created" onclick="setMyRole('created')">我组的</button>
+            <button data-role="joined" onclick="setMyRole('joined')">我上的</button>
+          </div>
+          <div class="my-filter-row">
+            <span class="k">状态</span>
+            <button data-status="all" class="on" onclick="setMyStatus('all')">全部</button>
+            <button data-status="open" onclick="setMyStatus('open')">进行中</button>
+            <button data-status="full" onclick="setMyStatus('full')">已满</button>
+          </div>
+        </div>
       `;
-      document.querySelector('.wrap').insertBefore(sub,document.querySelector('.wrap').firstChild);
+      document.querySelector('.wrap').insertBefore(panel, document.querySelector('.wrap').firstChild);
     }
-    sub.style.display='flex';
-    let hist=document.getElementById('myHist');
-    if(!hist){
-      hist=document.createElement('div');
-      hist.id='myHist';
-      hist.className='my-hist';
-      document.querySelector('.wrap').insertBefore(hist, sub.nextSibling);
-    }
-    hist.innerHTML=`
-      <button class="${myFull?'':'on'}" onclick="setMyFull(false,this)">进行中</button>
-      <button class="${myFull?'on':''}" onclick="setMyFull(true,this)">已满历史</button>
-    `;
-    hist.style.display='flex';
+    panel.style.display='block';
+    syncMyFilters();
   }else{
     hero.style.display='block';
     actions.style.display='flex';
     notice.style.display='block';
-    const sub=document.getElementById('mySub');
-    if(sub)sub.style.display='none';
-    const hist=document.getElementById('myHist');
-    if(hist)hist.style.display='none';
+    const panel=document.getElementById('myPanel');
+    if(panel)panel.style.display='none';
   }
   render();
 }
 
-function setMyTab(t,el){
-  myTab=t;
-  document.querySelectorAll('#mySub button').forEach(x=>x.classList.remove('on'));
-  el.classList.add('on');
+function myCountText(){
+  if(myRole==='all' && myStatus==='all') return '总共';
+  const bits=[];
+  if(myRole==='created') bits.push('我组的');
+  if(myRole==='joined') bits.push('我上的');
+  if(myStatus==='open') bits.push('进行中');
+  if(myStatus==='full') bits.push('已满');
+  return bits.join(' · ');
+}
+function setMyCount(n){
+  const el=document.getElementById('myCount');
+  if(!el) return;
+  el.innerHTML=`<b><em>${n}</em> 车</b>${myCountText()}`;
+}
+function syncMyFilters(){
+  document.querySelectorAll('#myPanel [data-role]').forEach(b=>b.classList.toggle('on', b.dataset.role===myRole));
+  document.querySelectorAll('#myPanel [data-status]').forEach(b=>b.classList.toggle('on', b.dataset.status===myStatus));
+}
+function setMyRole(role){
+  myRole=role;
+  syncMyFilters();
   render();
 }
-
-function setMyFull(full, el){
-  myFull=full;
-  document.querySelectorAll('#myHist button').forEach(x=>x.classList.remove('on'));
-  el.classList.add('on');
+function setMyStatus(status){
+  myStatus=status;
+  syncMyFilters();
   render();
 }
 
@@ -765,8 +781,9 @@ document.getElementById('pubForm').onsubmit=async e=>{
   document.getElementById('pubForm').reset();
   document.getElementById('groupPreview').style.display = 'none';
   closePub();
+  myRole='created';
+  myStatus='all';
   go('my');
-  setMyTab('created', document.querySelector('#mySub button:last-child'));
   load();
 };
 
