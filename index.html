@@ -112,7 +112,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .cal-cell .n{display:block;font-weight:600}
 .cal-cell .d{display:block;font-size:10px;color:#4ade80;margin-top:2px}
 .chat-list{max-height:46vh;overflow-y:auto;margin:4px 0 12px;display:flex;flex-direction:column;gap:14px}
-.chat-msg .who{font-size:12px;color:#aaa;line-height:1.7}
+.chat-msg .who{font-size:14px;font-weight:600;color:#f0f0f0;line-height:1.7}
 .chat-msg .who.host{color:var(--accent)}
 .chat-msg .tag,.chat-msg .time{color:#777;margin-left:6px;font-weight:400}
 .chat-msg .body{font-size:14px;line-height:1.6;margin-top:2px;white-space:pre-wrap;overflow-wrap:break-word}
@@ -229,7 +229,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
       <button class="btn-o" style="width:100%;margin-top:8px" onclick="demoLogin()">测试账号（跳过验证）</button>
       <p style="font-size:12px;color:var(--sub);margin-top:10px" id="authTip"></p>
       <div style="display:flex;gap:10px;margin-top:16px">
-        <button class="btn-o" style="flex:1" onclick="toggle()">切换注册</button>
+        <button class="btn-o" style="flex:1" type="button" id="authSwitch" onclick="toggle()">切换注册</button>
         <button class="btn-o" style="flex:1" onclick="closeAuth()">取消</button>
       </div>
     </div>
@@ -544,7 +544,7 @@ function toggle(){
   isReg=!isReg;
   document.getElementById('authBtn').innerText=isReg?'注册':'登录';
   document.getElementById('authTitle').innerText=isReg?'注册':'登录';
-  document.querySelector('#authForm + p + div button').innerText=isReg?'切换登录':'切换注册';
+  document.getElementById('authSwitch').innerText=isReg?'切换登录':'切换注册';
   document.getElementById('authTip').innerText='';
 }
 
@@ -1383,9 +1383,11 @@ async function loadChat() {
   const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 48;
   box.innerHTML = rows.map((m) => {
     const host = m.is_host === true || m.is_host === 'true';
+    const mine = user && m.user_id && String(m.user_id) === String(user.id);
     return '<div class="chat-msg"><div class="who' + (host ? ' host' : '') + '">'
-      + esc(m.name)
-      + (host ? '<span class="tag">车头</span>' : '')
+      + esc(m.name || '玩家')
+      + (mine ? '（我）' : '')
+      + (host ? '<span class="tag">车头</span>' : '<span class="tag">车友</span>')
       + '<span class="time">' + esc(m.at || '') + '</span></div>'
       + '<div class="body">' + esc(m.body) + '</div></div>';
   }).join('');
