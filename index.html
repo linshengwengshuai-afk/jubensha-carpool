@@ -170,7 +170,8 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
   <div class="modal-box" style="max-width:380px;text-align:center">
     <div style="font-size:28px;margin-bottom:8px">🔍</div>
     <h3 id="customModalTitle" style="margin-bottom:12px">提示</h3>
-    <p id="customModalMsg" style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:20px"></p>
+    <p id="customModalMsg" style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:16px"></p>
+    <input id="customModalInput" style="display:none;width:100%;background:#0d0d0d;border:1px solid #2a2a2a;color:#f0f0f0;height:44px;border-radius:8px;padding:0 12px;font-size:15px;margin-bottom:16px">
     <div id="customModalActions" style="display:flex;gap:10px;justify-content:center"></div>
   </div>
 </div>
@@ -311,7 +312,7 @@ function upd(){
 
 function viewQr(id) {
   const c = cars.find(x => x.id == id);
-  if (!c || !c.qr_image) return alert('暂无二维码');
+  if (!c || !c.qr_image) return customAlert('暂无二维码');
   const w = window.open('');
   w.document.write(`<img src="${c.qr_image}" style="max-width:90vw;max-height:90vh;display:block;margin:20px auto">`);
 }
@@ -357,17 +358,17 @@ document.getElementById('profileForm').onsubmit=async e=>{
   e.preventDefault();
   const name=document.getElementById('profileName').value.trim();
   const wx=document.getElementById('profileWx').value.trim();
-  if(!name){alert('用户名不能为空');return}
+  if(!name){customAlert('用户名不能为空');return}
   if(user && user.id!=='demo-user'){
     const {error}=await db.auth.updateUser({data:{username:name}});
-    if(error)return alert(error.message);
+    if(error)return customAlert(error.message);
     user.user_metadata=user.user_metadata||{};
     user.user_metadata.username=name;
   }
   setMyWx(wx); // 允许空字符串，表示未绑定
   upd();
   closeProfile();
-  alert('已保存');
+  customAlert('已保存');
 };
 
 async function load(){
@@ -438,15 +439,22 @@ function render(){
 // 上车：校验微信号，更新 members 与 current_count
 async function join(id){
   if(!user)return openAuth();
-  let wx=getMyWx();
-  if(!wx){
-    wx=prompt('请先绑定微信号（仅车头可见）');
-    if(!wx||!wx.trim())return;
-    setMyWx(wx.trim());
+  const saved = getMyWx();
+  if(!saved){
+    customPrompt('请先绑定微信号（仅车头可见）', '', (val) => {
+      if(!val || !val.trim()) return;
+      setMyWx(val.trim());
+      finishJoin(id, val.trim());
+    });
+    return;
   }
+  finishJoin(id, saved);
+}
+
+async function finishJoin(id, wx){
   const c=cars.find(x=>x.id===id);
   if(!c)return;
-  if(c.current_count>=c.total_count){alert('已满');return}
+  if(c.current_count>=c.total_count){customAlert('已满');return}
   const members = Array.isArray(c.members) ? [...c.members] : [];
   const un = user.user_metadata?.username || user.email?.split('@')[0] || '玩家';
   members.push({ name: un, contact: wx, isHost: false, user_id: user.id });
@@ -495,14 +503,15 @@ async function kickMember(carId, idx) {
 }
 
 // 车头改总人数
-async function editCount(id){
+function editCount(id){
   const c=cars.find(x=>x.id===id);
   if(!c)return;
-  const n=prompt('新的总需人数',c.total_count);
-  if(!n||isNaN(+n))return;
-  const {error}=await db.from('carpools').update({total_count:+n}).eq('id',id);
-  if(error)return alert(error.message);
-  load();
+  customPrompt('新的总需人数', c.total_count, async (n) => {
+    if(!n||isNaN(+n)) return customAlert('请输入数字');
+    const {error}=await db.from('carpools').update({total_count:+n}).eq('id',id);
+    if(error)return customAlert(error.message);
+    load();
+  });
 }
 
 async function del(id){
@@ -566,9 +575,9 @@ document.getElementById('pubForm').onsubmit=async e=>{
   if(!user)return openAuth();
   // 优先使用表单填写的，否则用已保存的微信号
   let wx=document.getElementById('fWx').value.trim() || getMyWx();
-  if(!wx){alert('请先在用户中心绑定微信号，或在此填写');return}
+  if(!wx){customAlert('请先在用户中心绑定微信号，或在此填写');return}
   const name=document.getElementById('fName').value.trim();
-  if(['情感','沉浸','哭哭','演绎','立意','还泪'].some(k=>name.includes(k)))return alert('禁止情感类');
+  if(['情感','沉浸','哭哭','演绎','立意','还泪'].some(k=>name.includes(k)))return customAlert('禁止情感类');
   const un = user.user_metadata?.username || user.email?.split('@')[0] || '玩家';
   const payload = {
     script_name: name,
@@ -613,7 +622,7 @@ function smartParse(){
   if(hostMatch)document.getElementById('fHost').value=hostMatch[1];
   const wxMatch=t.match(/微信[：:]\s*([^\n\s]+)/);
   if(wxMatch)document.getElementById('fWx').value=wxMatch[1].trim();
-  alert('已识别，请检查并补充');
+  customAlert('已识别，请检查并补充');
 }
 
 function demoLogin(){
@@ -621,13 +630,15 @@ function demoLogin(){
   localStorage.setItem('DEMO_USER','1');
   upd();
   closeAuth();
-  alert('已进入测试模式');
+  customAlert('已进入测试模式');
 }
 
 // ========== 自定义弹窗 ==========
 function showCustomModal(title, msg, buttons) {
   document.getElementById('customModalTitle').innerText = title || '提示';
   document.getElementById('customModalMsg').innerText = msg || '';
+  const input = document.getElementById('customModalInput');
+  if (input && !input.dataset.keep) input.style.display = 'none';
   const actions = document.getElementById('customModalActions');
   actions.innerHTML = '';
   (buttons || [{text:'确定', onClick: closeCustomModal}]).forEach(btn => {
@@ -645,20 +656,32 @@ function showCustomModal(title, msg, buttons) {
   document.getElementById('customModal').style.display = 'flex';
 }
 function closeCustomModal() {
+  const input = document.getElementById('customModalInput');
+  if (input) { input.style.display = 'none'; delete input.dataset.keep; }
   document.getElementById('customModal').style.display = 'none';
 }
 
-// 替换原生 alert
-function customAlert(msg, title) {
-  showCustomModal(title || '提示', msg, [{text:'确定', primary:true}]);
+function customAlert(msg, title, onClose) {
+  showCustomModal(title || '提示', msg, [{text:'确定', primary:true, onClick: onClose}]);
 }
 
-// 替换原生 confirm
 function customConfirm(msg, onYes, title) {
   showCustomModal(title || '确认', msg, [
     {text:'取消'},
     {text:'确定', primary:true, onClick: onYes}
   ]);
+}
+
+function customPrompt(msg, defaultValue, onOk, title) {
+  const input = document.getElementById('customModalInput');
+  input.dataset.keep = '1';
+  input.style.display = 'block';
+  input.value = defaultValue == null ? '' : String(defaultValue);
+  showCustomModal(title || '请输入', msg, [
+    {text:'取消'},
+    {text:'确定', primary:true, onClick: () => { if (onOk) onOk(input.value); }}
+  ]);
+  setTimeout(() => input.focus(), 30);
 }
 const TAROT = [
   {name:'愚者',kw:'新开始 · 冒险 · 开放',up:'今天适合尝试新本或新店，运势开放，容易遇到有趣的车友和意外的好局。',rev:'别太冲动上车，先确认时间和规则，避免临时放鸽子或踩坑。',advice:'建议先看清车头信息和剩余名额再决定。'},
@@ -700,8 +723,7 @@ function getDailyTarot(){
 
 function openDailyTarot(){
   if(!user){
-    alert('请先登录后再查看每日塔罗');
-    openAuth();
+    customAlert('请先登录后再查看每日塔罗', '提示', openAuth);
     return;
   }
   const t = getDailyTarot();
