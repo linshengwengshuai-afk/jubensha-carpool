@@ -16,19 +16,16 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--text);min-height:100vh}
-.nav{background:rgba(13,13,13,.95);border-bottom:1px solid var(--line);padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+.nav{background:#0d0d0d;border-bottom:1px solid var(--line);padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
 .nav h1{font-size:18px;font-weight:600;letter-spacing:-.5px}
 .user{background:var(--accent);color:#000;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
-.top-tabs{display:flex;gap:16px;margin-left:24px}
-.top-tabs button{background:none;border:none;color:var(--sub);font-size:14px;font-weight:500;cursor:pointer;padding:4px 0;border-bottom:2px solid transparent}
-.top-tabs button.on{color:var(--text);border-bottom-color:var(--accent)}
-.notice{background:#1a1a1a;border:1px solid #333;padding:16px 20px;margin:16px auto;max-width:720px;border-radius:10px;font-size:14px;color:#ccc;line-height:1.7;text-align:center}
-.notice strong{color:#4ade80;font-weight:600}
-.hero{padding:40px 20px 40px;text-align:center;max-width:600px;margin:0 auto}
+.notice{background:#1a1a1a;border:1px solid #333;border-left:3px solid #f59e0b;padding:16px 20px;margin:16px 20px;border-radius:8px;font-size:14px;color:#ccc;line-height:1.6}
+.notice strong{color:#f59e0b}
+.hero{padding:60px 20px 40px;text-align:center;max-width:600px;margin:0 auto}
 .hero h2{font-size:32px;font-weight:700;letter-spacing:-1px;margin-bottom:12px}
 .hero p{color:var(--sub);font-size:15px;line-height:1.6}
 .actions{display:flex;gap:12px;max-width:480px;margin:0 auto 40px;padding:0 20px}
-.action{flex:1;background:var(--card);border:1px solid var(--line);padding:24px 16px;border-radius:12px;text-align:center;cursor:pointer;transition:border-color .2s}
+.action{flex:1;background:var(--card);border:1px solid var(--line);padding:24px 16px;border-radius:12px;text-align:center;cursor:pointer}
 .action:hover{border-color:var(--accent)}
 .action .icon{font-size:24px;margin-bottom:8px}
 .action .title{font-size:15px;font-weight:600}
@@ -48,8 +45,16 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .need{color:var(--accent);font-size:13px;font-weight:500}
 .btn{background:var(--accent);color:#000;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
 .btn-o{background:transparent;border:1px solid var(--line);color:var(--sub);padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:200}
-.modal-box{background:#111;border-radius:16px;padding:20px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto}
+.top-tabs{display:flex;gap:16px;margin-left:24px}
+.top-tabs button{background:none;border:none;color:var(--sub);font-size:14px;font-weight:500;cursor:pointer;padding:4px 0;border-bottom:2px solid transparent}
+.top-tabs button.on{color:var(--text);border-bottom-color:var(--accent)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal-box{background:#111;border-radius:16px;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+.modal-box.wide{max-width:720px}
+.pub-grid{display:flex;flex-direction:column;gap:16px}
+@media(min-width:700px){
+  .pub-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:20px}
+}
 .modal-box h3{font-size:18px;margin-bottom:16px}
 .field{margin-bottom:12px}
 .field label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
@@ -57,19 +62,14 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .row{display:flex;gap:10px}
 .row .field{flex:1}
 .empty{text-align:center;padding:60px;color:var(--sub)}
-#listSection{display:none}
-.my-hero{text-align:center;padding:30px 20px;background:linear-gradient(180deg,#1a1a1a 0%,#0d0d0d 100%);border-radius:12px;margin-bottom:20px}
-.my-hero h2{font-size:28px;margin-bottom:8px}
-.my-stats{display:flex;justify-content:center;gap:30px;margin-top:16px}
-.my-stat{text-align:center}
-.my-stat .num{font-size:24px;font-weight:700;color:var(--accent)}
-.my-stat .label{font-size:12px;color:var(--sub)}
-.detective-badge{display:inline-block;background:#2a2a2a;padding:4px 12px;border-radius:20px;font-size:12px;color:#888;margin-bottom:10px}
-
+.my-subtabs{display:flex;gap:8px;margin-bottom:16px;justify-content:center}
+.my-subtabs button{background:var(--card);border:1px solid var(--line);color:var(--sub);padding:6px 16px;border-radius:20px;font-size:13px;cursor:pointer}
+.my-subtabs button.on{background:var(--accent);color:#000;border-color:var(--accent)}
+.member-list{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.6}
+.member-list .host{color:var(--accent)}
 @media(min-width:600px){
   .hero h2{font-size:42px}
   .grid{grid-template-columns:1fr 1fr}
-  .modal-box{max-width:900px}
 }
 @media(min-width:900px){
   .wrap{max-width:1000px}
@@ -79,13 +79,11 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 </head>
 <body>
 <nav class="nav">
-  <div style="display:flex;align-items:center">
-    <h1>拼车</h1>
-    <div class="top-tabs">
-      <button class="on" id="navSquare" onclick="go('square')">广场</button>
-      <button id="navMy" onclick="go('my')">我的</button>
-    </div>
+  <div class="top-tabs">
+    <button class="on" id="navSquare" onclick="go('square')">广场</button>
+    <button id="navMy" onclick="go('my')">我的</button>
   </div>
+  <h1>拼车 <span style="color:#4ade80;font-size:12px">v4</span></h1>
   <span class="user" id="userTag" onclick="openAuth()">登录</span>
 </nav>
 
@@ -94,26 +92,30 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
   这里专为本地推理爱好者设计，仅开放给深圳推理群的伙伴们使用～<br>
   温馨提示：本平台暂不支持情感向剧本的组队需求，感谢您的理解与支持！
 </div>
-
-<div class="hero">
+<div style="max-width:800px;margin:0 auto"><div class="hero">
   <h2>🔍 找到你的局</h2>
   <p>推理剧本拼车，找人组局</p>
 </div>
-
+</div>
 <div class="actions">
   <div class="action" onclick="showList('carpool')">
-    <div class="icon">\1f697</div>
+    <div class="icon">🚗</div>
     <div class="title">拼车中心</div>
     <div class="desc">加入已有的局</div>
   </div>
   <div class="action" onclick="openPub()">
-    <div class="icon">\1f4dd</div>
+    <div class="icon">📝</div>
     <div class="title">组局</div>
     <div class="desc">发起新的拼车</div>
   </div>
+  <div class="action" onclick="openDailyTarot()">
+    <div class="icon">🔮</div>
+    <div class="title">每日塔罗</div>
+    <div class="desc">今日打本运势</div>
+  </div>
 </div>
 
-<div class="wrap" id="listSection">
+<div class="wrap" id="listSection" style="display:none">
   <input class="search" id="searchInput" placeholder="搜索剧本或地点" oninput="render()">
   <div class="filters">
     <span class="f on" onclick="setF('全部',this)">全部</span>
@@ -125,31 +127,74 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
   <div class="grid" id="list"></div>
 </div>
 
+<!-- 登录/注册 -->
 <div id="authModal" class="modal" style="display:none">
   <div class="modal-box">
     <h3 id="authTitle">登录</h3>
-    <form id="authForm">
-      <div class="field"><label>账号</label><input id="authUser" required></div>
-      <div class="field"><label>密码</label><input type="password" id="authPass" required></div>
-      <button class="btn" style="width:100%;height:44px" type="submit" id="authBtn">登录</button>
-    </form>
-    <button class="btn-o" style="width:100%;margin-top:8px" onclick="demoLogin()">测试账号（跳过验证）</button>
-    <p style="font-size:12px;color:var(--sub);margin-top:10px" id="authTip"></p>
-    <div style="display:flex;gap:10px;margin-top:16px">
-      <button class="btn-o" style="flex:1" onclick="toggle()">切换注册</button>
-      <button class="btn-o" style="flex:1" onclick="closeAuth()">取消</button>
+    <div id="authFormWrap">
+      <form id="authForm">
+        <div class="field"><label>邮箱</label><input id="authUser" type="email" required placeholder="请输入邮箱（注册时使用）"></div>
+        <div class="field"><label>密码</label><input type="password" id="authPass" required placeholder="至少6位"></div>
+        <button class="btn" style="width:100%;height:44px" type="submit" id="authBtn">登录</button>
+      </form>
+      <p style="font-size:12px;color:var(--sub);margin-top:8px;text-align:center">注册与登录均使用邮箱，请使用真实邮箱</p>
+      <button class="btn-o" style="width:100%;margin-top:8px" onclick="demoLogin()">测试账号（跳过验证）</button>
+      <p style="font-size:12px;color:var(--sub);margin-top:10px" id="authTip"></p>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn-o" style="flex:1" onclick="toggle()">切换注册</button>
+        <button class="btn-o" style="flex:1" onclick="closeAuth()">取消</button>
+      </div>
     </div>
-    <button class="btn-o" style="width:100%;margin-top:10px;display:none" id="logoutBtn" onclick="logout()">退出</button>
+    <div id="loggedInActions" style="display:none">
+      <button class="btn" style="width:100%;height:44px;margin-bottom:8px" onclick="openProfile()">用户中心</button>
+      <button class="btn-o" style="width:100%;height:44px" onclick="logout()">退出登录</button>
+    </div>
   </div>
 </div>
 
+<!-- 用户中心：改用户名 + 绑定微信号（选填） -->
+<div id="profileModal" class="modal" style="display:none">
+  <div class="modal-box">
+    <h3>用户中心</h3>
+    <form id="profileForm">
+      <div class="field"><label>用户名</label><input id="profileName" required placeholder="显示在车上的名字"></div>
+      <div class="field"><label>微信号（选填）</label><input id="profileWx" placeholder="填写后上车/组局自动使用"></div>
+      <button class="btn" style="width:100%;height:44px" type="submit">保存</button>
+    </form>
+    <button class="btn-o" style="width:100%;margin-top:8px" onclick="closeProfile()">关闭</button>
+  </div>
+</div>
+
+<!-- 自定义确认/提示弹窗 -->
+<div id="customModal" class="modal" style="display:none">
+  <div class="modal-box" style="max-width:380px;text-align:center">
+    <div style="font-size:28px;margin-bottom:8px">🔍</div>
+    <h3 id="customModalTitle" style="margin-bottom:12px">提示</h3>
+    <p id="customModalMsg" style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:20px"></p>
+    <div id="customModalActions" style="display:flex;gap:10px;justify-content:center"></div>
+  </div>
+</div>
+<!-- 每日塔罗 -->
+<div id="tarotModal" class="modal" style="display:none">
+  <div class="modal-box" style="text-align:center;max-width:420px">
+    <h3 style="margin-bottom:4px">每日塔罗 · 今日打本运势</h3>
+    <div id="tarotCardName" style="font-size:24px;font-weight:700;color:var(--accent);margin:10px 0 4px"></div>
+    <div id="tarotPosition" style="font-size:13px;color:var(--sub);margin-bottom:10px"></div>
+    <div id="tarotKeywords" style="font-size:12px;color:#aaa;margin-bottom:12px"></div>
+    <div id="tarotMeaning" style="font-size:14px;line-height:1.7;text-align:left;background:#0d0d0d;padding:14px;border-radius:8px;border:1px solid var(--line);margin-bottom:10px"></div>
+    <div id="tarotAdvice" style="font-size:13px;line-height:1.6;text-align:left;color:#ccc;background:#111;padding:12px;border-radius:8px;border:1px dashed var(--line)"></div>
+    <button class="btn" style="width:100%;margin-top:16px;height:44px" onclick="closeTarot()">收下运势</button>
+  </div>
+</div>
+
+<!-- 发布拼车 -->
 <div id="pubModal" class="modal" style="display:none">
-  <div class="modal-box" style="max-width:900px">
+  <div class="modal-box wide">
     <h3>发起拼车</h3>
-    <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:20px">
+    <div class="pub-grid">
       <div>
         <label style="font-size:12px;color:#888">粘贴群消息，例如：</label>
-        <textarea id="pasteArea" style="width:100%;height:180px;background:#0d0d0d;border:1px solid #2a2a2a;color:#f0f0f0;border-radius:8px;padding:10px;font-size:13px;margin-top:6px" placeholder="《狗岛谋杀循环》
+        <textarea id="pasteArea" style="width:100%;height:160px;background:#0d0d0d;border:1px solid #2a2a2a;color:#f0f0f0;border-radius:8px;padding:10px;font-size:13px;margin-top:6px;resize:vertical" placeholder="《狗岛谋杀循环》
 开局时间：2026.09.05 14:00
 地点：炸蛋推理社
 费用：98元/位
@@ -170,18 +215,12 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
           <div class="field"><label>发起人</label><input id="fHost" placeholder="例如：陈大明"></div>
         </div>
         <div class="field"><label>标签</label><input id="fTags" placeholder="推理 硬核"></div>
-        <div class="row">
-          <div class="field">
-            <label>微信号</label>
-            <input id="fWx" placeholder="例如：wx_123456">
-          </div>
-          <div class="field">
-            <label>群二维码（可选）</label>
-            <input type="file" id="fGroup" accept="image/*" style="font-size:12px">
-            <img id="groupPreview" style="max-width:80px;margin-top:6px;display:none;border-radius:4px">
-          </div>
+        <div class="field"><label>微信号（已绑定则自动带入）</label><input id="fWx" placeholder="例如：wx_123456"></div>
+        <div class="field">
+          <label>群二维码（可选）</label>
+          <input type="file" id="fGroup" accept="image/*" style="font-size:12px">
+          <img id="groupPreview" style="max-width:80px;margin-top:6px;display:none;border-radius:4px">
         </div>
-        <p style="font-size:11px;color:#888;margin-bottom:8px">微信号或群二维码至少填一个</p>
         <button class="btn" style="width:100%;height:44px" type="submit">立即发布至广场</button>
       </form>
     </div>
@@ -192,20 +231,32 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 <script>
 const SUPABASE_URL = 'https://mfdeckoqqyvihvwzukus.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGVja29xcXl2aWh2d3p1a3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Nzc2NzQsImV4cCI6MjEwMzE1MzY3NH0.MDVvtjnq99N294og4lvH2oFCHuif8pdHIEMr4EYwl9Q';
-let db, cars = [], filter = '全部', user = null, isReg = false, page = 'square';
+let db, cars = [], filter = '全部', user = null, isReg = false, page = 'square', myTab = 'joined';
 
-function getMyCarIds() { return JSON.parse(localStorage.getItem('MY_CAR_IDS')) || []; }
-function addMyCarId(id) { const l = getMyCarIds(); if(!l.includes(id)) { l.push(id); localStorage.setItem('MY_CAR_IDS', JSON.stringify(l)); } }
-function removeMyCarId(id) { const l = getMyCarIds().filter(i => i != id); localStorage.setItem('MY_CAR_IDS', JSON.stringify(l)); }
-function getJoinedCarIds() { return JSON.parse(localStorage.getItem('JOINED_CAR_IDS')) || []; }
-function addJoinedCarId(id) { const l = getJoinedCarIds(); if(!l.includes(id)) { l.push(id); localStorage.setItem('JOINED_CAR_IDS', JSON.stringify(l)); } }
-function removeJoinedCarId(id) { const l = getJoinedCarIds().filter(i => i != id); localStorage.setItem('JOINED_CAR_IDS', JSON.stringify(l)); }
+// 用户微信号本地缓存（按 user.id，仅作快捷填充）
+function getMyWx() { return localStorage.getItem('MY_WX_' + (user?.id || 'guest')) || ''; }
+function setMyWx(wx) { if(user) localStorage.setItem('MY_WX_' + user.id, wx); }
+
+// 判断是否是我发起的车
+function isMyCreated(c) {
+  return user && c.creator_id === user.id;
+}
+
+// 判断是否是我上过的车（优先用 user_id，兼容旧数据）
+function isMyJoined(c) {
+  if (!user || !Array.isArray(c.members)) return false;
+  return c.members.some(m => !m.isHost && (
+    m.user_id === user.id ||
+    m.name === (user.user_metadata?.username || user.email?.split('@')[0]) ||
+    (getMyWx() && m.contact === getMyWx())
+  ));
+}
 
 const fake = [
-  {id:9001, script_name:'无人生还', game_time:'今晚 19:30', location:'徐汇 · 密室空间', total_count:6, current_count:4, price:'98', host:'阿白', tags:['推理','硬核'], creator_id:null},
-  {id:9002, script_name:'恐怖游轮', game_time:'明天 14:00', location:'静安 · 黑匣子', total_count:5, current_count:3, price:'AA', host:'夜行', tags:['恐怖'], creator_id:null},
-  {id:9003, script_name:'年轮', game_time:'周六 15:00', location:'浦东 · 剧本社', total_count:7, current_count:5, price:'108', host:'林', tags:['机制','欢乐'], creator_id:null},
-  {id:9004, script_name:'第七号嫌疑人', game_time:'今晚 20:00', location:'黄浦 · 老房子', total_count:6, current_count:2, price:'88', host:'侦探', tags:['推理'], creator_id:null}
+  {id:9001, script_name:'无人生还', game_time:'今晚 19:30', location:'徐汇 · 密室空间', total_count:6, current_count:4, price:'98', host:'阿白', tags:['推理','硬核'], creator_id:null, contact:'wx_abai', members:[{name:'阿白',contact:'wx_abai',isHost:true}]},
+  {id:9002, script_name:'恐怖游轮', game_time:'明天 14:00', location:'静安 · 黑匣子', total_count:5, current_count:3, price:'AA', host:'夜行', tags:['恐怖'], creator_id:null, contact:'wx_night', members:[{name:'夜行',contact:'wx_night',isHost:true}]},
+  {id:9003, script_name:'年轮', game_time:'周六 15:00', location:'浦东 · 剧本社', total_count:7, current_count:5, price:'108', host:'林', tags:['机制','欢乐'], creator_id:null, contact:'wx_lin', members:[{name:'林',contact:'wx_lin',isHost:true}]},
+  {id:9004, script_name:'第七号嫌疑人', game_time:'今晚 20:00', location:'黄浦 · 老房子', total_count:6, current_count:2, price:'88', host:'侦探', tags:['推理'], creator_id:null, contact:'wx_detective', members:[{name:'侦探',contact:'wx_detective',isHost:true}]}
 ];
 
 function showList(m){
@@ -216,8 +267,22 @@ function showList(m){
 
 function openAuth(){document.getElementById('authModal').style.display='flex';upd()}
 function closeAuth(){document.getElementById('authModal').style.display='none'}
-function openPub(){if(!user)return openAuth();document.getElementById('pubModal').style.display='flex'}
+function openPub(){
+  if(!user)return openAuth();
+  // 预填已保存的微信号
+  const savedWx = getMyWx();
+  if(savedWx) document.getElementById('fWx').value = savedWx;
+  document.getElementById('pubModal').style.display='flex';
+}
 function closePub(){document.getElementById('pubModal').style.display='none'}
+function openProfile(){
+  if(!user)return openAuth();
+  document.getElementById('profileName').value = user.user_metadata?.username || '';
+  document.getElementById('profileWx').value = getMyWx();
+  document.getElementById('profileModal').style.display='flex';
+  closeAuth();
+}
+function closeProfile(){document.getElementById('profileModal').style.display='none'}
 
 function toggle(){
   isReg=!isReg;
@@ -229,22 +294,43 @@ function toggle(){
 
 function upd(){
   const t=document.getElementById('userTag');
-  const l=document.getElementById('logoutBtn');
+  const formWrap=document.getElementById('authFormWrap');
+  const loggedIn=document.getElementById('loggedInActions');
   if(user){
     t.innerText=user.user_metadata?.username||user.email?.split('@')[0]||'已登录';
-    l.style.display='block';
+    if(formWrap) formWrap.style.display='none';
+    if(loggedIn) loggedIn.style.display='block';
+    document.getElementById('authTitle').innerText='账户';
   }else{
     t.innerText='登录';
-    l.style.display='none';
+    if(formWrap) formWrap.style.display='block';
+    if(loggedIn) loggedIn.style.display='none';
+    document.getElementById('authTitle').innerText=isReg?'注册':'登录';
   }
 }
 
+function viewQr(id) {
+  const c = cars.find(x => x.id == id);
+  if (!c || !c.qr_image) return alert('暂无二维码');
+  const w = window.open('');
+  w.document.write(`<img src="${c.qr_image}" style="max-width:90vw;max-height:90vh;display:block;margin:20px auto">`);
+}
+
 async function init(){
-  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-  const{data:{session}}=await db.auth.getSession();
-  if(session)user=session.user;
-  db.auth.onAuthStateChange((_,s)=>{user=s?.user||null;upd();load()});
-  upd();load();
+  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const { data: { session } } = await db.auth.getSession();
+  if (session) user = session.user;
+  else if (localStorage.getItem('DEMO_USER')) user = { id: 'demo-user', user_metadata: { username: '测试用户' }, email: 'test@carpool.local' };
+  db.auth.onAuthStateChange((_, s) => { user = s?.user || null; upd(); load(); });
+  upd();
+  load();
+
+  // Realtime 订阅
+  db.channel('carpools-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'carpools' }, () => {
+      load();
+    })
+    .subscribe();
 }
 
 document.getElementById('authForm').onsubmit=async e=>{
@@ -252,7 +338,7 @@ document.getElementById('authForm').onsubmit=async e=>{
   const u=document.getElementById('authUser').value.trim();
   const p=document.getElementById('authPass').value;
   if(u.length<2||p.length<6){document.getElementById('authTip').innerText='账号≥2，密码≥6';return}
-  const email=u+'@example.com';
+  const email=u.includes('@')?u:u+'@gmail.com';
   const btn=document.getElementById('authBtn');
   btn.disabled=true;btn.innerText='...';
   let err;
@@ -266,6 +352,24 @@ document.getElementById('authForm').onsubmit=async e=>{
 
 async function logout(){await db.auth.signOut();user=null;upd();closeAuth()}
 
+// 用户中心保存：更新用户名（metadata）+ 本地微信号（选填）
+document.getElementById('profileForm').onsubmit=async e=>{
+  e.preventDefault();
+  const name=document.getElementById('profileName').value.trim();
+  const wx=document.getElementById('profileWx').value.trim();
+  if(!name){alert('用户名不能为空');return}
+  if(user && user.id!=='demo-user'){
+    const {error}=await db.auth.updateUser({data:{username:name}});
+    if(error)return alert(error.message);
+    user.user_metadata=user.user_metadata||{};
+    user.user_metadata.username=name;
+  }
+  setMyWx(wx); // 允许空字符串，表示未绑定
+  upd();
+  closeProfile();
+  alert('已保存');
+};
+
 async function load(){
   const{data}=await db.from('carpools').select('*').order('id',{ascending:false});
   cars=[...fake,...(data||[])];
@@ -278,72 +382,135 @@ function render(){
   let list=cars;
   if(page==='my'){
     if(!user){document.getElementById('list').innerHTML='<div class="empty">请先登录</div>';return}
+    if(myTab==='joined'){
+      list=list.filter(c=>isMyJoined(c));
+    }else{
+      list=list.filter(c=>isMyCreated(c));
+    }
   }
   list=list.filter(c=>{
     const t=((c.script_name||'')+(c.location||'')+(c.host||'')).toLowerCase();
     return(!q||t.includes(q))&&(filter==='全部'||(c.tags||[]).some(x=>String(x).includes(filter)));
   });
   const el=document.getElementById('list');
-  if(page==='my'){
-    const myIds = getMyCarIds();
-    const joinedIds = getJoinedCarIds();
-    const created = list.filter(c => myIds.includes(c.id) || (user && c.creator_id === user.id));
-    const joined = list.filter(c => joinedIds.includes(c.id) && !myIds.includes(c.id));
-    el.innerHTML = '';
-    if(created.length){
-      const h=document.createElement('div');
-      h.style.cssText='font-size:15px;font-weight:600;margin:20px 0 10px;color:#4ade80';
-      h.innerText='我组的车';
-      el.appendChild(h);
-      created.forEach(c => el.appendChild(makeCard(c)));
+  el.innerHTML=list.length?'':'<div class="empty">暂无拼车</div>';
+  list.forEach(c=>{
+    const need=Math.max(0,(c.total_count||0)-(c.current_count||0));
+    const mine=isMyCreated(c);
+    const joined=isMyJoined(c);
+    const members=Array.isArray(c.members)?c.members:[];
+    const d=document.createElement('div');
+    d.className='card';
+    let memberHtml='';
+    if(page==='my'){
+      memberHtml='<div class="member-list">';
+      members.forEach((m, idx)=>{
+        const showContact=mine||m.isHost;
+        const kickBtn = (mine && !m.isHost) 
+          ? ` <button class="btn-o" style="padding:2px 8px;font-size:11px;margin-left:6px" onclick="kickMember(${c.id}, ${idx})">移除</button>`
+          : '';
+        memberHtml+=`<div>${m.isHost?'<span class="host">车头</span> ':''}${m.name}${showContact&&m.contact? ' · '+m.contact:''}${kickBtn}</div>`;
+      });
+      memberHtml+='</div>';
     }
-    if(joined.length){
-      const h=document.createElement('div');
-      h.style.cssText='font-size:15px;font-weight:600;margin:20px 0 10px;color:#888';
-      h.innerText='我上的车';
-      el.appendChild(h);
-      joined.forEach(c => el.appendChild(makeCard(c)));
-    }
-    if(!created.length && !joined.length) el.innerHTML='<div class="empty">暂无拼车</div>';
-  }else{
-    el.innerHTML=list.length?'':'<div class="empty">暂无拼车</div>';
-    list.forEach(c => el.appendChild(makeCard(c)));
-  }
+    d.innerHTML=`
+      <div class="card-title">${c.script_name||'未命名'}</div>
+      <div class="card-row">🕐 ${c.game_time||'-'}</div>
+      <div class="card-row">📍 ${c.location||'-'}</div>
+      <div class="card-row">💰 ${c.price||'面议'} · ${c.host||'车头'}</div>
+      ${page==='my' && c.contact ? `<div class="card-row">💬 车头微信：${c.contact}</div>` : ''}
+      ${c.qr_image ? `<div class="card-row"><button class="btn-o" style="padding:4px 10px;font-size:12px" onclick="viewQr('${c.id}')">📲 查看群二维码</button></div>` : ''}
+      ${memberHtml}
+      <div class="card-bottom">
+        <span class="need">${need>0?'还缺 '+need+' 人':'已满'}</span>
+        ${page==='my'&&mine?`
+          <button class="btn-o" onclick="editCount(${c.id})">改人数</button>
+          <button class="btn-o" onclick="del(${c.id})">解散</button>
+        `:''}
+        ${page==='my'&&joined&&!mine?`<button class="btn-o" onclick="leave(${c.id})">下车</button>`:''}
+        ${page!=='my'&&need>0&&!mine&&!joined?`<button class="btn" onclick="join(${c.id})">上车</button>`:''}
+      </div>
+    `;
+    el.appendChild(d);
+  });
 }
 
-function makeCard(c){
-  const need=Math.max(0,(c.total_count||0)-(c.current_count||0));
-  const mine=user&&c.creator_id===user.id;
-  const d=document.createElement('div');
-  d.className='card';
-  d.innerHTML=`
-    <div class="card-title">${c.script_name||'未命名'}</div>
-    <div class="card-row">\1f551 ${c.game_time||'-'}</div>
-    <div class="card-row">\1f4cd ${c.location||'-'}</div>
-    <div class="card-row">${c.price?'￥'+c.price+' · ':''}${c.host||'车头'}</div>
-    <div class="card-bottom">
-      <span class="need">${need>0?'还缺 '+need+' 人':'已满'}</span>
-      ${page==='my'&&mine?'<button class="btn-o" onclick="del('+c.id+')">删除</button>':(need>0&&!mine?'<button class="btn" onclick="join('+c.id+')">上车</button>':'')}
-    </div>
-  `;
-  return d;
-}
-
-function join(id){
+// 上车：校验微信号，更新 members 与 current_count
+async function join(id){
   if(!user)return openAuth();
-  const c = cars.find(x => x.id === id);
-  if(!c) return;
-  if(c.current_count >= c.total_count){alert('已满');return}
-  c.current_count = (c.current_count || 0) + 1;
-  addJoinedCarId(id);
-  alert('已上车');
-  render();
-}
-async function del(id){
-  if(!confirm('删除？'))return;
-  await db.from('carpools').delete().eq('id',id).eq('creator_id',user.id);
-  removeMyCarId(id);
+  let wx=getMyWx();
+  if(!wx){
+    wx=prompt('请先绑定微信号（仅车头可见）');
+    if(!wx||!wx.trim())return;
+    setMyWx(wx.trim());
+  }
+  const c=cars.find(x=>x.id===id);
+  if(!c)return;
+  if(c.current_count>=c.total_count){alert('已满');return}
+  const members = Array.isArray(c.members) ? [...c.members] : [];
+  const un = user.user_metadata?.username || user.email?.split('@')[0] || '玩家';
+  members.push({ name: un, contact: wx, isHost: false, user_id: user.id });
+  const newCount = (c.current_count || 0) + 1;
+  const { error } = await db.from('carpools').update({ current_count: newCount, members }).eq('id', id);
+  if (error) return customAlert(error.message);
+  customAlert('已上车');
   load();
+}
+
+// 下车
+async function leave(id){
+  customConfirm('确定下车？', async () => {
+    const c=cars.find(x=>x.id===id);
+    if(!c)return;
+    const myWx = getMyWx();
+    const myName = user.user_metadata?.username || user.email?.split('@')[0] || '';
+    let members = Array.isArray(c.members) ? [...c.members] : [];
+    members = members.filter(m => !(
+      !m.isHost && (
+        m.user_id === user.id ||
+        m.name === myName ||
+        (myWx && m.contact === myWx)
+      )
+    ));
+    const newCount = Math.max(1, (c.current_count || 1) - 1);
+    const {error}=await db.from('carpools').update({current_count:newCount,members}).eq('id',id);
+    if(error)return customAlert(error.message);
+    customAlert('已下车');
+    load();
+  });
+}
+
+// 车头直接踢人（按索引）
+async function kickMember(carId, idx) {
+  const c = cars.find(x => x.id == carId);
+  if (!c || !Array.isArray(c.members) || !c.members[idx] || c.members[idx].isHost) return;
+  customConfirm(`确定移除「${c.members[idx].name}」？`, async () => {
+    const members = c.members.filter((_, i) => i !== idx);
+    const newCount = Math.max(1, (c.current_count || 1) - 1);
+    const { error } = await db.from('carpools').update({ current_count: newCount, members }).eq('id', carId);
+    if (error) return customAlert(error.message);
+    customAlert('已移除');
+    load();
+  });
+}
+
+// 车头改总人数
+async function editCount(id){
+  const c=cars.find(x=>x.id===id);
+  if(!c)return;
+  const n=prompt('新的总需人数',c.total_count);
+  if(!n||isNaN(+n))return;
+  const {error}=await db.from('carpools').update({total_count:+n}).eq('id',id);
+  if(error)return alert(error.message);
+  load();
+}
+
+async function del(id){
+  customConfirm('确定解散并删除这个拼车？', async () => {
+    await db.from('carpools').delete().eq('id',id);
+    customAlert('已解散');
+    load();
+  });
 }
 
 function setF(f,el){
@@ -365,52 +532,67 @@ function go(p){
     hero.style.display='none';
     actions.style.display='none';
     notice.style.display='none';
-    let myHero=document.getElementById('myHero');
-    if(!myHero){
-      myHero=document.createElement('div');
-      myHero.id='myHero';
-      myHero.className='my-hero';
-      myHero.innerHTML='<div class="detective-badge">🔍 侦探档案</div><h2>我的拼车</h2><p style="color:#888;font-size:14px">管理你的局</p>';
-      document.querySelector('.wrap').insertBefore(myHero,document.querySelector('.wrap').firstChild);
+    let sub=document.getElementById('mySub');
+    if(!sub){
+      sub=document.createElement('div');
+      sub.id='mySub';
+      sub.className='my-subtabs';
+      sub.innerHTML=`
+        <button class="on" onclick="setMyTab('joined',this)">我上的车</button>
+        <button onclick="setMyTab('created',this)">我组的车</button>
+      `;
+      document.querySelector('.wrap').insertBefore(sub,document.querySelector('.wrap').firstChild);
     }
-    myHero.style.display='block';
+    sub.style.display='flex';
   }else{
     hero.style.display='block';
     actions.style.display='flex';
     notice.style.display='block';
-    const myHero=document.getElementById('myHero');
-    if(myHero)myHero.style.display='none';
+    const sub=document.getElementById('mySub');
+    if(sub)sub.style.display='none';
   }
+  render();
+}
+
+function setMyTab(t,el){
+  myTab=t;
+  document.querySelectorAll('.my-subtabs button').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
   render();
 }
 
 document.getElementById('pubForm').onsubmit=async e=>{
   e.preventDefault();
   if(!user)return openAuth();
-  if(!document.getElementById('fWx').value.trim()&&!document.getElementById('fGroup').files[0]){alert('微信号或群二维码至少填一个');return}
+  // 优先使用表单填写的，否则用已保存的微信号
+  let wx=document.getElementById('fWx').value.trim() || getMyWx();
+  if(!wx){alert('请先在用户中心绑定微信号，或在此填写');return}
   const name=document.getElementById('fName').value.trim();
   if(['情感','沉浸','哭哭','演绎','立意','还泪'].some(k=>name.includes(k)))return alert('禁止情感类');
-  const un=document.getElementById('fHost').value.trim()||user.user_metadata?.username||user.email?.split('@')[0]||'玩家';
-  const payload={
-    script_name:name,
-    game_time:document.getElementById('fTime').value.trim(),
-    location:document.getElementById('fLoc').value.trim(),
-    total_count:+document.getElementById('fTotal').value,
-    current_count:+document.getElementById('fCur').value,
-    price:document.getElementById('fPrice').value.trim(),
-    host:un,
-    tags:document.getElementById('fTags').value.trim().split(/\s+/).filter(Boolean),
-    members:[{name:un,isHost:true}],
-    creator_id:user.id
+  const un = user.user_metadata?.username || user.email?.split('@')[0] || '玩家';
+  const payload = {
+    script_name: name,
+    game_time: document.getElementById('fTime').value.trim(),
+    location: document.getElementById('fLoc').value.trim(),
+    total_count: +document.getElementById('fTotal').value,
+    current_count: +document.getElementById('fCur').value,
+    price: document.getElementById('fPrice').value.trim(),
+    host: un,
+    contact: wx,
+    tags: document.getElementById('fTags').value.trim().split(/\s+/).filter(Boolean),
+    members: [{ name: un, contact: wx, isHost: true, user_id: user.id }],
+    creator_id: user.id,
+    qr_image: qrBase64 || null
   };
-  const{data,error}=await db.from('carpools').insert([payload]).select();
-  if(error)return alert(error.message);
-  alert('发布成功');
-  if(data && data[0]) addMyCarId(data[0].id);
+  const { data, error } = await db.from('carpools').insert([payload]).select();
+  if(error)return customAlert(error.message);
+  customAlert('发布成功');
+  qrBase64 = '';
   document.getElementById('pubForm').reset();
+  document.getElementById('groupPreview').style.display = 'none';
   closePub();
   go('my');
-  showList('carpool');
+  setMyTab('created', document.querySelector('.my-subtabs button:last-child'));
   load();
 };
 
@@ -427,21 +609,124 @@ function smartParse(){
   if(priceMatch)document.getElementById('fPrice').value=priceMatch[1].trim();
   const numMatch=t.match(/人数[：:]\s*(\d+)/)||t.match(/目前人数[：:]\s*(\d+)/);
   if(numMatch)document.getElementById('fCur').value=numMatch[1];
-  const hostMatch=t.match(/([一-龥]{2,4})(?=\s|$)/);
+  const hostMatch=t.match(/([\u4e00-\u9fa5]{2,4})(?=\s|$)/);
   if(hostMatch)document.getElementById('fHost').value=hostMatch[1];
+  const wxMatch=t.match(/微信[：:]\s*([^\n\s]+)/);
+  if(wxMatch)document.getElementById('fWx').value=wxMatch[1].trim();
   alert('已识别，请检查并补充');
 }
 
 function demoLogin(){
   user={id:'demo-user',user_metadata:{username:'测试用户'},email:'test@carpool.local'};
+  localStorage.setItem('DEMO_USER','1');
   upd();
   closeAuth();
   alert('已进入测试模式');
 }
 
-document.getElementById('fGroup').onchange=e=>{
-  const f=e.target.files[0];
-  if(f){const r=new FileReader();r.onload=()=>{document.getElementById('groupPreview').src=r.result;document.getElementById('groupPreview').style.display='block'};r.readAsDataURL(f)}
+// ========== 自定义弹窗 ==========
+function showCustomModal(title, msg, buttons) {
+  document.getElementById('customModalTitle').innerText = title || '提示';
+  document.getElementById('customModalMsg').innerText = msg || '';
+  const actions = document.getElementById('customModalActions');
+  actions.innerHTML = '';
+  (buttons || [{text:'确定', onClick: closeCustomModal}]).forEach(btn => {
+    const b = document.createElement('button');
+    b.className = btn.primary ? 'btn' : 'btn-o';
+    b.style.minWidth = '100px';
+    b.style.height = '40px';
+    b.innerText = btn.text;
+    b.onclick = () => {
+      closeCustomModal();
+      if (btn.onClick) btn.onClick();
+    };
+    actions.appendChild(b);
+  });
+  document.getElementById('customModal').style.display = 'flex';
+}
+function closeCustomModal() {
+  document.getElementById('customModal').style.display = 'none';
+}
+
+// 替换原生 alert
+function customAlert(msg, title) {
+  showCustomModal(title || '提示', msg, [{text:'确定', primary:true}]);
+}
+
+// 替换原生 confirm
+function customConfirm(msg, onYes, title) {
+  showCustomModal(title || '确认', msg, [
+    {text:'取消'},
+    {text:'确定', primary:true, onClick: onYes}
+  ]);
+}
+const TAROT = [
+  {name:'愚者',kw:'新开始 · 冒险 · 开放',up:'今天适合尝试新本或新店，运势开放，容易遇到有趣的车友和意外的好局。',rev:'别太冲动上车，先确认时间和规则，避免临时放鸽子或踩坑。',advice:'建议先看清车头信息和剩余名额再决定。'},
+  {name:'魔术师',kw:'执行力 · 清晰 · 表现',up:'推理状态极佳，线索看得很清，容易成为局里的亮点，适合硬核本。',rev:'信息可能有误区，建议多核对关键点再发言，避免带偏节奏。',advice:'今天发言前多想半步，效果更好。'},
+  {name:'女祭司',kw:'直觉 · 隐藏 · 洞察',up:'直觉敏锐，适合机制本或有隐藏信息的本，容易抓到别人忽略的关键。',rev:'今天信息不够透明，多听少说更稳，别急着下结论。',advice:'适合安静观察，再决定是否深度参与讨论。'},
+  {name:'女皇',kw:'氛围 · 舒适 · 欢乐',up:'氛围很好，欢乐本或轻松局运势佳，容易玩得开心、互动顺畅。',rev:'注意节奏，别被情绪带偏，也别把局聊得太散。',advice:'优先选氛围轻松的车，体验会更好。'},
+  {name:'皇帝',kw:'主导 · 秩序 · 稳定',up:'适合当车头或主导讨论，组织力强，局会比较顺、不容易乱。',rev:'别太强势，给其他人一点空间，否则容易引起反感。',advice:'如果你是车头，今天适合主动控场。'},
+  {name:'恋人',kw:'选择 · 契合 · 合作',up:'容易遇到合拍的车友，组队运势好，适合双人或小车。',rev:'选择需谨慎，避免和节奏不合的人硬组，可能影响体验。',advice:'优先选你熟悉或评价不错的车。'},
+  {name:'战车',kw:'推进 · 决断 · 突破',up:'推进力强，适合硬核推理，容易把局盘清楚、拿到结果。',rev:'别急着下结论，容易忽略细节，建议放慢一点。',advice:'今天适合挑战有难度的本。'},
+  {name:'力量',kw:'稳定 · 耐心 · 掌控',up:'心态稳定，即使遇到坑也能稳住，适合挑战高难度本。',rev:'今天容易上头，记得控制情绪，别因为小分歧影响整局。',advice:'遇到分歧时先冷静，再继续。'},
+  {name:'隐士',kw:'深挖 · 独立 · 思考',up:'适合独自深挖线索的本，安静思考更容易出结果。',rev:'别太封闭，适当交流会更顺，完全不说话可能错过信息。',advice:'可以多问一两个关键问题。'},
+  {name:'命运之轮',kw:'变化 · 机遇 · 波动',up:'今天运势波动大，有惊喜局，也有可能临时变动，保持弹性。',rev:'计划容易被打乱，建议留点备选，别把期望压得太满。',advice:'多关注几个车，别只盯一个。'},
+  {name:'正义',kw:'公平 · 判断 · 清晰',up:'判断准确，适合需要公平讨论的机制本，容易帮局理清逻辑。',rev:'容易钻牛角尖，记得换个角度看问题，别死磕一个点。',advice:'发言时尽量客观，效果更好。'},
+  {name:'死神',kw:'结束 · 重生 · 转变',up:'适合告别旧坑、尝试新风格的本，有重生感和新鲜体验。',rev:'旧的习惯可能影响发挥，试着放开一点，别用老套路。',advice:'可以尝试你平时不太玩的类型。'},
+  {name:'星星',kw:'希望 · 灵感 · 顺利',up:'希望感强，容易遇到高质量的局和靠谱车头，整体顺畅。',rev:'期待别太高，普通局也能玩出乐趣，别因落差影响心情。',advice:'保持平常心，体验会更稳。'},
+  {name:'月亮',kw:'直觉 · 迷雾 · 氛围',up:'适合恐怖/氛围本，想象力丰富，容易沉浸。',rev:'容易被误导，注意区分真假信息，别被气氛带跑。',advice:'恐怖本优先，但记得核对关键线索。'},
+  {name:'太阳',kw:'顺利 · 开心 · 满员',up:'今天打本运势极佳，开心、顺利、容易满员，推荐直接上车。',rev:'别太乐观，细节还是要核对，避免临时变动。',advice:'适合主动组局或邀请朋友一起。'},
+  {name:'世界',kw:'完整 · 圆满 · 收官',up:'完整感强，适合长线本或收官局，容易有圆满体验。',rev:'还有未完成的部分，别急着结束讨论，多留一点时间。',advice:'适合把之前想玩但没玩到的本提上日程。'}
+];
+
+function getDailyTarot(){
+  if(!user) return null;
+  const d = new Date();
+  const dateSeed = d.getFullYear()*10000 + (d.getMonth()+1)*100 + d.getDate();
+  // 用用户 ID + 日期做种子，保证同一账号每天固定一张
+  const userSeed = String(user.id).split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const seed = (dateSeed + userSeed) % 999983;
+  const idx = seed % TAROT.length;
+  const reversed = (seed % 2) === 1;
+  const card = TAROT[idx];
+  return {
+    name: card.name,
+    position: reversed ? '逆位' : '正位',
+    keywords: card.kw,
+    meaning: reversed ? card.rev : card.up,
+    advice: card.advice
+  };
+}
+
+function openDailyTarot(){
+  if(!user){
+    alert('请先登录后再查看每日塔罗');
+    openAuth();
+    return;
+  }
+  const t = getDailyTarot();
+  if(!t) return;
+  document.getElementById('tarotCardName').innerText = '「' + t.name + '」';
+  document.getElementById('tarotPosition').innerText = t.position;
+  document.getElementById('tarotKeywords').innerText = t.keywords;
+  document.getElementById('tarotMeaning').innerText = t.meaning;
+  document.getElementById('tarotAdvice').innerText = '💡 今日建议：' + t.advice;
+  document.getElementById('tarotModal').style.display = 'flex';
+}
+function closeTarot(){ document.getElementById('tarotModal').style.display = 'none'; }
+
+let qrBase64 = ''; // 临时存储二维码
+
+document.getElementById('fGroup').onchange = e => {
+  const f = e.target.files[0];
+  if (!f) { qrBase64 = ''; return; }
+  const r = new FileReader();
+  r.onload = () => {
+    qrBase64 = r.result;
+    document.getElementById('groupPreview').src = qrBase64;
+    document.getElementById('groupPreview').style.display = 'block';
+  };
+  r.readAsDataURL(f);
 };
 
 window.addEventListener('DOMContentLoaded',init);
