@@ -83,6 +83,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .field label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
 .qr-field label.qr-pick{display:inline-flex;width:auto;margin-top:2px}
 .field input{width:100%;background:#0d0d0d;border:1px solid var(--line);color:var(--text);height:44px;border-radius:8px;padding:0 12px;font-size:15px}
+.field input[type="date"],.field input[type="time"]{color-scheme:dark}
 .row{display:flex;gap:10px}
 .row .field{flex:1}
 .empty{text-align:center;padding:60px;color:var(--sub)}
@@ -290,17 +291,22 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <div class="pub-grid">
       <div>
         <label style="font-size:12px;color:#888">粘贴群消息，例如：</label>
-        <textarea id="pasteArea" style="width:100%;height:160px;background:#0d0d0d;border:1px solid #2a2a2a;color:#f0f0f0;border-radius:8px;padding:10px;font-size:13px;margin-top:6px;resize:vertical" placeholder="《狗岛谋杀循环》
-开局时间：2026.09.05 14:00
-地点：炸蛋推理社
-费用：98元/位
-目前人数：5=1 陈大明
+        <textarea id="pasteArea" style="width:100%;height:160px;background:#0d0d0d;border:1px solid #2a2a2a;color:#f0f0f0;border-radius:8px;padding:10px;font-size:13px;margin-top:6px;resize:vertical" placeholder="时间：11.25 周三 14:00
+剧本：她未能歌颂的明日
+人数：3=6
+地点：侦巷
 微信：wx_123456"></textarea>
         <button type="button" class="btn" style="width:100%;margin-top:8px" onclick="smartParse()">智能识别并自动填表</button>
       </div>
       <form id="pubForm">
         <div class="field"><label>剧本名称</label><input id="fName" required placeholder="例如：狗岛谋杀循环"></div>
-        <div class="field"><label>开局时间</label><input id="fWhen" type="datetime-local" required></div>
+        <div class="field">
+          <label>开局时间</label>
+          <div class="row">
+            <div class="field"><label>日期</label><input id="fDate" type="date" required></div>
+            <div class="field"><label>时刻</label><input id="fTime" type="time" required></div>
+          </div>
+        </div>
         <div class="field"><label>开局地点</label><input id="fLoc" required placeholder="例如：炸蛋推理社"></div>
         <div class="row">
           <div class="field"><label>总需人数</label><input id="fTotal" type="number" required placeholder="5"></div>
@@ -489,8 +495,8 @@ function openPub(){
   if(!user)return openAuth();
   const savedWx = getMyWx();
   if(savedWx) document.getElementById('fWx').value = savedWx;
-  const whenInput = document.getElementById('fWhen');
-  if (whenInput) whenInput.min = hkToday() + 'T00:00';
+  const dateInput = document.getElementById('fDate');
+  if (dateInput) dateInput.min = hkToday();
   document.getElementById('pubModal').style.display='flex';
 }
 function closePub(){document.getElementById('pubModal').style.display='none'}
@@ -950,9 +956,8 @@ async function publishCar(){
   let wx=document.getElementById('fWx').value.trim() || getMyWx();
   if(!wx){say('请先填写微信号，或在用户中心绑定');return}
   const name=document.getElementById('fName').value.trim();
-  const when=document.getElementById('fWhen').value;
-  const date=when.slice(0,10);
-  const clock=when.slice(11,16);
+  const date=document.getElementById('fDate').value;
+  const clock=document.getElementById('fTime').value;
   const loc=document.getElementById('fLoc').value.trim();
   const total=+document.getElementById('fTotal').value;
   const cur=+document.getElementById('fCur').value;
@@ -1008,32 +1013,73 @@ async function publishCar(){
 }
 document.getElementById('pubForm').onsubmit=e=>{e.preventDefault();publishCar()};
 
+function guessYear(month, day) {
+  const today = hkToday();
+  const y = +today.slice(0, 4);
+  const key = y + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+  return key < today ? y + 1 : y;
+}
+function parseClock(raw) {
+  let m = raw.match(/(\d{1,2})\s*[:：]\s*(\d{2})/);
+  if (m) {
+    const h = +m[1];
+    if (h > 23) return '';
+    return String(h).padStart(2, '0') + ':' + m[2];
+  }
+  m = raw.match(/(上午|下午|晚上|中午)?\s*(\d{1,2})\s*点(?:\s*(\d{1,2}))?/);
+  if (!m) return '';
+  let h = +m[2];
+  if (h > 23) return '';
+  if ((m[1] === '下午' || m[1] === '晚上') && h < 12) h += 12;
+  if (m[1] === '中午' && h < 11) h += 12;
+  const min = m[3] ? String(+m[3]).padStart(2, '0') : '00';
+  return String(h).padStart(2, '0') + ':' + min;
+}
+function parseWhenText(raw) {
+  let y, mo, d, found;
+  let m = raw.match(/(\d{4})\s*[.\-/年]\s*(\d{1,2})\s*[.\-/月]\s*(\d{1,2})/);
+  if (m) {
+    y = +m[1]; mo = +m[2]; d = +m[3]; found = true;
+  } else {
+    m = raw.match(/(\d{1,2})\s*[.\-/月]\s*(\d{1,2})/);
+    if (m) {
+      mo = +m[1]; d = +m[2]; y = guessYear(mo, d); found = true;
+    }
+  }
+  if (!found || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  return {
+    date: y + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0'),
+    clock: parseClock(raw)
+  };
+}
 function smartParse(){
   const t=document.getElementById('pasteArea').value;
   if(!t)return;
   const nameMatch=t.match(/《([^》]+)》/)||t.match(/剧本[：:]\s*([^\n]+)/);
-  if(nameMatch)document.getElementById('fName').value=nameMatch[1].trim();
-  const timeMatch=t.match(/时间[：:]\s*([^\n]+)/)||t.match(/开局时间[：:]\s*([^\n]+)/);
+  if(nameMatch)document.getElementById('fName').value=nameMatch[1].replace(/^[\s📅📕⏰👥📍]+/,'').trim();
+  const timeMatch=t.match(/(?:开局)?时间[：:]\s*([^\n]+)/);
   if(timeMatch){
-    const raw=timeMatch[1].trim();
-    const m=raw.match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})(?:\s+(\d{1,2})[:：](\d{2}))?/);
-    if(m){
-      const date=`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
-      const clock=m[4] ? `${m[4].padStart(2,'0')}:${m[5]}` : '00:00';
-      document.getElementById('fWhen').value=date+'T'+clock;
+    const when=parseWhenText(timeMatch[1]);
+    if(when){
+      document.getElementById('fDate').value=when.date;
+      if(when.clock) document.getElementById('fTime').value=when.clock;
     }
   }
   const locMatch=t.match(/地点[：:]\s*([^\n]+)/);
-  if(locMatch)document.getElementById('fLoc').value=locMatch[1].trim();
+  if(locMatch)document.getElementById('fLoc').value=locMatch[1].replace(/^[\s📅📕⏰👥📍]+/,'').trim();
   const priceMatch=t.match(/费用[：:]\s*([^\n]+)/)||t.match(/金额[：:]\s*([^\n]+)/);
   if(priceMatch)document.getElementById('fPrice').value=priceMatch[1].trim();
-  const numMatch=t.match(/人数[：:]\s*(\d+)/)||t.match(/目前人数[：:]\s*(\d+)/);
-  if(numMatch)document.getElementById('fCur').value=numMatch[1];
-  const hostMatch=t.match(/([\u4e00-\u9fa5]{2,4})(?=\s|$)/);
-  if(hostMatch)document.getElementById('fHost').value=hostMatch[1];
+  const numMatch=t.match(/(?:目前)?人数[：:]\s*(\d+)\s*(?:[/＝=]\s*(\d+))?/);
+  if(numMatch){
+    document.getElementById('fCur').value=numMatch[1];
+    if(numMatch[2]) document.getElementById('fTotal').value=numMatch[2];
+  }
+  const hostMatch=t.match(/(?:发起人|车头|主持|DM)[：:]\s*([^\n]+)/i);
+  if(hostMatch)document.getElementById('fHost').value=hostMatch[1].trim();
+  else document.getElementById('fHost').value='';
   const wxMatch=t.match(/微信[：:]\s*([^\n\s]+)/);
   if(wxMatch)document.getElementById('fWx').value=wxMatch[1].trim();
-  customAlert('已识别，请检查并补充');
+  customAlert('已识别，请核对日期和时刻');
 }
 
 function demoLogin(){
