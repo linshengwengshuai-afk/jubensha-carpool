@@ -362,6 +362,34 @@ function upd(){
   }
 }
 
+function copyHostWx(id) {
+  const c = cars.find(x => x.id == id);
+  if (!c || !c.contact) return customAlert('没有可复制的微信号');
+  const val = c.contact;
+  const done = () => customAlert('已复制车头微信');
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = val;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      done();
+    } catch (e) {
+      customAlert('复制失败，请长按微信号手动复制');
+    }
+    ta.remove();
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(val).then(done).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
 function viewQr(id) {
   const c = cars.find(x => x.id == id);
   if (!c || !c.qr_image) return customAlert('暂无二维码');
@@ -502,7 +530,7 @@ function render(){
       <div class="card-row">🕐 ${c.game_time||'-'}</div>
       <div class="card-row">📍 ${c.location||'-'}</div>
       <div class="card-row">💰 ${c.price||'面议'} · ${c.host||'车头'}</div>
-      ${page==='my' && c.contact ? `<div class="card-row">💬 车头微信：${c.contact}</div>` : ''}
+      ${page==='my' && c.contact ? `<div class="card-row">💬 车头微信：${c.contact} <button class="btn-o" style="padding:2px 8px;font-size:11px" onclick="copyHostWx(${c.id})">复制</button></div>` : ''}
       ${c.qr_image ? `<div class="card-row"><button class="btn-o" style="padding:4px 10px;font-size:12px" onclick="viewQr('${c.id}')">📲 查看群二维码</button></div>` : ''}
       ${memberHtml}
       <div class="card-bottom">
