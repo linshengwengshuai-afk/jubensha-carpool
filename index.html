@@ -69,12 +69,10 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .qr-pick{display:inline-flex;align-items:center;justify-content:center;min-width:160px;height:44px;padding:0 16px;border:1px dashed #3a3a3a;border-radius:8px;color:#ccc;font-size:13px;cursor:pointer}
 #fGroup{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
 #groupPreview{display:none;margin:10px auto 0;max-width:120px;border-radius:8px}
-.legal{max-width:640px;margin:0 auto;color:#ccc;font-size:14px;line-height:1.7}
-.legal h2{color:#f0f0f0;font-size:20px;margin-bottom:8px}
-.legal h3{color:#f0f0f0;font-size:15px;margin:16px 0 6px}
-.legal p{margin:0 0 8px}
-.site-foot{margin-top:48px;padding:20px 16px 28px;border-top:1px solid var(--line);text-align:center}
-.site-foot button{background:none;border:none;color:#666;font-size:12px;cursor:pointer}
+.site-foot{margin-top:72px;padding:32px 20px 40px;border-top:1px solid var(--line)}
+.disclaimer{max-width:720px;margin:0 auto;text-align:left;color:#9a9a9a;font-size:13px;line-height:1.7;overflow-wrap:break-word}
+.disclaimer p{margin:0 0 12px}
+.disclaimer p:last-child{margin-bottom:0}
 @media(min-width:700px){
   .pub-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:20px;align-items:start}
 }
@@ -126,6 +124,8 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
   .actions{flex-direction:column;max-width:100%;margin-bottom:24px}
   .action{padding:16px}
   .notice{margin:12px;padding:12px 14px;font-size:13px}
+  .site-foot{margin-top:48px;padding:28px 16px 36px}
+  .disclaimer{font-size:12px}
   .modal{align-items:flex-end;padding:0}
   .modal-box,.modal-box.wide{max-width:100%;width:100%;max-height:92vh;border-radius:16px 16px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
   .row{flex-direction:column;gap:0}
@@ -205,23 +205,15 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
   <div id="calDayList" style="margin-top:14px"></div>
 </div>
 
-<div class="wrap" id="legalSection" style="display:none">
-  <div class="legal">
-    <h2>免责声明</h2>
+<footer class="site-foot">
+  <div class="disclaimer">
+    <p>免责声明</p>
     <p>使用本站即表示你已阅读并同意以下内容。本站是深圳推理群的拼车信息板，只帮大家发车、上车，不是组局方，也不是店家。</p>
-    <h3>微信与联系方式</h3>
-    <p>微信号、群二维码由用户自己填写。本站不核验真假，也不保证对方一定是本人。上车后，车友只能看到车头的微信；车头可以看到车上车友的微信。请不要把别人的微信转到本车以外的地方。</p>
-    <p>线下见面、转账、爽约、纠纷，由当事人自己处理。本站不参与收款，也不承担因此产生的损失。</p>
-    <h3>拼车信息</h3>
+    <p>微信号、群二维码由用户自己填写。本站不核验真假，也不保证对方一定是本人。上车后，车友只能看到车头的微信；车头可以看到车上车友的微信。请不要把别人的微信转到本车以外的地方。线下见面、转账、爽约、纠纷，由当事人自己处理。本站不参与收款，也不承担因此产生的损失。</p>
     <p>剧本、时间、地点、人数、费用都由发车人填写，可能有误或临时变动。开局当天 23:59（香港时间）后，该车会从站内删除。本站不保证车能拼成，也不保证每个人都会到场。</p>
-    <h3>安全</h3>
-    <p>请自行判断是否参加。不要向陌生人预付大额费用，见面请选店家等公共场所。若你发现诈骗、骚扰或泄露他人微信，请停止联系并自行向平台或警方反映。本站可以删除相关车次，但不承担赔偿。</p>
-    <h3>其他</h3>
-    <p>本站不承接情感向剧本。每日塔罗只是玩梗，不构成任何建议。账号和密码请自己保管。</p>
+    <p>请自行判断是否参加。不要向陌生人预付大额费用，见面请选店家等公共场所。若发现诈骗、骚扰或泄露他人微信，请停止联系并自行反映。本站可以删除相关车次，但不承担赔偿。本站不承接情感向剧本。每日塔罗只是玩梗，不构成任何建议。</p>
   </div>
-</div>
-
-<footer class="site-foot"><button type="button" id="navLegal">免责声明</button></footer>
+</footer>
 
 <!-- 登录/注册 -->
 <div id="authModal" class="modal" style="display:none">
@@ -874,10 +866,8 @@ function go(p){
   document.getElementById('navDone').classList.toggle('on',p==='done');
   document.getElementById('navCal').classList.toggle('on',p==='cal');
   const calOn = p==='cal';
-  const legalOn = p==='legal';
-  document.getElementById('listSection').style.display = (calOn || legalOn) ? 'none' : 'block';
+  document.getElementById('listSection').style.display = calOn ? 'none' : 'block';
   document.getElementById('calSection').style.display = calOn ? 'block' : 'none';
-  document.getElementById('legalSection').style.display = legalOn ? 'block' : 'none';
   const hero=document.querySelector('.hero');
   const actions=document.querySelector('.actions');
   const notice=document.querySelector('.notice');
@@ -885,7 +875,7 @@ function go(p){
   hero.style.display = browsing ? 'block' : 'none';
   actions.style.display = browsing ? 'flex' : 'none';
   notice.style.display = browsing ? 'block' : 'none';
-  document.getElementById('searchInput').style.display = (p==='done' || calOn || legalOn) ? 'none' : 'block';
+  document.getElementById('searchInput').style.display = (p==='done' || calOn) ? 'none' : 'block';
   document.querySelector('.filters').style.display = browsing ? 'flex' : 'none';
 
   let tabs=document.getElementById('myTabs');
@@ -920,7 +910,6 @@ function go(p){
   done.style.display = p==='done' ? 'block' : 'none';
   syncDoneFilters();
   if (calOn) { renderCal(); return; }
-  if (legalOn) return;
   render();
 }
 
@@ -1314,7 +1303,6 @@ bindTap(document.getElementById('navSquare'), () => go('square'));
 bindTap(document.getElementById('navMy'), () => go('my'));
 bindTap(document.getElementById('navDone'), () => go('done'));
 bindTap(document.getElementById('navCal'), () => go('cal'));
-bindTap(document.getElementById('navLegal'), () => go('legal'));
 bindTap(document.getElementById('calPrev'), () => shiftCal(-1));
 bindTap(document.getElementById('calNext'), () => shiftCal(1));
 bindTap(document.getElementById('authBtn'), () => submitAuth());
