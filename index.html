@@ -111,6 +111,13 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .cal-cell.today .n{color:#4ade80}
 .cal-cell .n{display:block;font-weight:600}
 .cal-cell .d{display:block;font-size:10px;color:#4ade80;margin-top:2px}
+.chat-list{max-height:46vh;overflow-y:auto;margin:4px 0 12px;display:flex;flex-direction:column;gap:14px}
+.chat-msg .who{font-size:12px;color:#aaa;line-height:1.7}
+.chat-msg .who.host{color:var(--accent)}
+.chat-msg .tag,.chat-msg .time{color:#777;margin-left:6px;font-weight:400}
+.chat-msg .body{font-size:14px;line-height:1.6;margin-top:2px;white-space:pre-wrap;overflow-wrap:break-word}
+.chat-send{display:flex;gap:8px;align-items:center}
+.chat-send input{flex:1;background:#0d0d0d;border:1px solid var(--line);color:var(--text);height:44px;border-radius:8px;padding:0 12px;font-size:15px}
 .member-list{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.6}
 .member-list .host{color:var(--accent)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#1c1c1c;border:1px solid #333;color:#ddd;padding:10px 16px;border-radius:999px;font-size:13px;z-index:400;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
@@ -264,6 +271,23 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
   </div>
 </div>
 
+<div id="chatModal" class="modal" style="display:none">
+  <div class="modal-box">
+    <div class="list-back">
+      <div>
+        <h3 id="chatTitle" style="margin:0">车内聊天</h3>
+        <div style="font-size:12px;color:#888;margin-top:4px">仅车上的人可见</div>
+      </div>
+      <button type="button" class="btn-o" id="chatClose">关闭</button>
+    </div>
+    <div class="chat-list" id="chatList"></div>
+    <div class="chat-send">
+      <input id="chatInput" maxlength="200" placeholder="跟车上的人说一句" autocomplete="off">
+      <button class="btn" type="button" id="chatSend" style="height:44px">发送</button>
+    </div>
+  </div>
+</div>
+
 <!-- 自定义确认/提示弹窗 -->
 <div id="customModal" class="modal" style="display:none">
   <div class="modal-box" style="max-width:380px;text-align:center">
@@ -405,7 +429,8 @@ function friendlyError(err) {
   if (/发车日期|开局日期|开局时间/.test(m)) return m.replace('发车日期', '开局日期');
   if (/ambiguous/i.test(m)) return '数据库函数有列名冲突。请在 Supabase SQL Editor 运行最新的修复 SQL';
   if (/save_profile|my_profile/i.test(m)) return '微信号还没能存进账号。请先在 Supabase SQL Editor 运行 profiles.sql';
-  if (/list_carpools|create_carpool|function public/i.test(m)) return '数据库权限还没升级。请先在 Supabase 的 SQL Editor 运行 rls.sql';
+  if (/list_car_messages|send_car_message|carpool_messages/i.test(m)) return '车内聊天还没建好。请先在 Supabase SQL Editor 运行 chat.sql';
+  if (/只有车上的人|请输入内容|最多 200/.test(m)) return m;
   if (/list_carpools|create_carpool|function public/i.test(m)) return '数据库权限还没升级。请先在 Supabase 的 SQL Editor 运行 rls.sql';
   return m || '操作失败，请稍后再试';
 }
@@ -760,6 +785,7 @@ function render(){
       ${minePage && c.contact ? `<div class="card-row">💬 车头微信：${c.contact} <button class="btn-o" style="padding:2px 8px;font-size:11px" onclick="copyHostWx(${c.id})">复制</button></div>` : ''}
       ${c.qr_image ? `<div class="card-row"><button class="btn-o" style="padding:4px 10px;font-size:12px" onclick="viewQr('${c.id}')">📲 查看群二维码</button></div>` : ''}
       ${memberHtml}
+      ${page==='my'&&(mine||joined)?`<div style="margin-top:10px"><button class="btn-o" type="button" onclick="openChat(${Number(c.id)})">车内聊天</button></div>`:''}
       <div class="card-bottom">
         <span class="need">${need>0?'还缺 '+need+' 人':'已满'}</span>
         ${minePage&&mine?`
@@ -874,6 +900,7 @@ function setF(f,el){
 }
 
 function go(p){
+  if (chatCarId) closeChat();
   page=p;
   document.getElementById('navSquare').classList.toggle('on',p==='square');
   document.getElementById('navMy').classList.toggle('on',p==='my');
@@ -1311,6 +1338,78 @@ function renderCal() {
   }).join('');
 }
 
+let chatCarId = null;
+let chatTimer = null;
+function openChat(id) {
+  if (!user) return openAuth();
+  if (Number(id) >= 9000) return customAlert('示例局没有聊天');
+  const c = cars.find((x) => Number(x.id) === Number(id));
+  if (!c) return;
+  chatCarId = Number(id);
+  document.getElementById('chatTitle').innerText = c.script_name || '车内聊天';
+  document.getElementById('chatInput').value = '';
+  document.getElementById('chatModal').style.display = 'flex';
+  loadChat();
+  if (chatTimer) clearInterval(chatTimer);
+  chatTimer = setInterval(loadChat, 4000);
+}
+function closeChat() {
+  chatCarId = null;
+  if (chatTimer) clearInterval(chatTimer);
+  chatTimer = null;
+  const modal = document.getElementById('chatModal');
+  if (modal) modal.style.display = 'none';
+}
+async function loadChat() {
+  if (!chatCarId || !db) return;
+  const id = chatCarId;
+  let data, error;
+  try {
+    const res = await db.rpc('list_car_messages', { p_id: id });
+    data = res.data;
+    error = res.error;
+  } catch (e) { error = e; }
+  if (id !== chatCarId) return;
+  const box = document.getElementById('chatList');
+  if (error) {
+    box.innerHTML = '<div class="empty" style="padding:24px">' + esc(friendlyError(error)) + '</div>';
+    return;
+  }
+  const rows = Array.isArray(data) ? data : [];
+  if (!rows.length) {
+    box.innerHTML = '<div class="empty" style="padding:24px">还没有人说话</div>';
+    return;
+  }
+  const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 48;
+  box.innerHTML = rows.map((m) => {
+    const host = m.is_host === true || m.is_host === 'true';
+    return '<div class="chat-msg"><div class="who' + (host ? ' host' : '') + '">'
+      + esc(m.name)
+      + (host ? '<span class="tag">车头</span>' : '')
+      + '<span class="time">' + esc(m.at || '') + '</span></div>'
+      + '<div class="body">' + esc(m.body) + '</div></div>';
+  }).join('');
+  if (nearBottom) box.scrollTop = box.scrollHeight;
+}
+async function sendChat() {
+  if (!chatCarId) return;
+  const input = document.getElementById('chatInput');
+  const body = input.value.trim();
+  if (!body) return;
+  if (body.length > 200) return customAlert('最多 200 字');
+  const btn = document.getElementById('chatSend');
+  btn.disabled = true;
+  let error;
+  try {
+    const res = await db.rpc('send_car_message', { p_id: chatCarId, p_body: body });
+    error = res.error;
+  } catch (e) { error = e; }
+  btn.disabled = false;
+  if (error) return customAlert(friendlyError(error));
+  input.value = '';
+  loadChat();
+}
+
 bindTap(document.getElementById('actList'), () => showList());
 bindTap(document.getElementById('openDisclaimer'), () => openDisclaimer());
 bindTap(document.getElementById('openDisclaimerList'), () => openDisclaimer());
@@ -1329,6 +1428,11 @@ bindTap(document.getElementById('calNext'), () => shiftCal(1));
 bindTap(document.getElementById('authBtn'), () => submitAuth());
 bindTap(document.getElementById('profileSave'), () => saveProfile());
 bindTap(document.getElementById('pubBtn'), () => publishCar());
+bindTap(document.getElementById('chatClose'), () => closeChat());
+bindTap(document.getElementById('chatSend'), () => sendChat());
+document.getElementById('chatInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendChat();
+});
 document.getElementById('userTag').onclick = null;
 document.getElementById('navSquare').onclick = null;
 document.getElementById('navMy').onclick = null;
