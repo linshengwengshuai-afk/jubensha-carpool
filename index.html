@@ -73,8 +73,8 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .legal h2{color:#f0f0f0;font-size:20px;margin-bottom:8px}
 .legal h3{color:#f0f0f0;font-size:15px;margin:16px 0 6px}
 .legal p{margin:0 0 8px}
-.site-foot{text-align:center;padding:4px 16px 28px}
-.site-foot button,.text-link{background:none;border:none;color:#888;font-size:12px;cursor:pointer;text-decoration:underline;padding:0}
+.site-foot{margin-top:48px;padding:20px 16px 28px;border-top:1px solid var(--line);text-align:center}
+.site-foot button{background:none;border:none;color:#666;font-size:12px;cursor:pointer}
 @media(min-width:700px){
   .pub-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:20px;align-items:start}
 }
@@ -293,7 +293,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
         <label style="font-size:12px;color:#888">粘贴群消息，例如：</label>
         <textarea id="pasteArea" style="width:100%;height:160px;background:#0d0d0d;border:1px solid #2a2a2a;color:#f0f0f0;border-radius:8px;padding:10px;font-size:13px;margin-top:6px;resize:vertical" placeholder="时间：11.25 周三 14:00
 剧本：她未能歌颂的明日
-人数：3=6
+人数：=5
 地点：侦巷
 微信：wx_123456"></textarea>
         <button type="button" class="btn" style="width:100%;margin-top:8px" onclick="smartParse()">智能识别并自动填表</button>
@@ -309,7 +309,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
         </div>
         <div class="field"><label>开局地点</label><input id="fLoc" required placeholder="例如：炸蛋推理社"></div>
         <div class="row">
-          <div class="field"><label>总需人数</label><input id="fTotal" type="number" required placeholder="5"></div>
+          <div class="field"><label>总需人数</label><input id="fTotal" type="number" required value="6"></div>
           <div class="field"><label>当前已有</label><input id="fCur" type="number" required placeholder="4"></div>
         </div>
         <div class="row">
@@ -326,7 +326,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
         </div>
         <p id="pubErr" style="color:#f87171;font-size:13px;min-height:18px;margin:0 0 8px"></p>
         <button class="btn" style="width:100%;height:44px" type="button" id="pubBtn">立即发布至广场</button>
-        <p style="font-size:12px;color:#888;margin-top:8px">开局当天 23:59 后自动删除，和几点开打无关。发布即表示同意 <button type="button" class="text-link" id="pubLegal">免责声明</button>。</p>
+        <p style="font-size:12px;color:#888;margin-top:8px">总人数默认 6，可以改。开局当天 23:59 后自动删除。</p>
       </form>
     </div>
     <button class="btn-o" style="width:100%;margin-top:12px" onclick="closePub()">取消</button>
@@ -1069,10 +1069,27 @@ function smartParse(){
   if(locMatch)document.getElementById('fLoc').value=locMatch[1].replace(/^[\s📅📕⏰👥📍]+/,'').trim();
   const priceMatch=t.match(/费用[：:]\s*([^\n]+)/)||t.match(/金额[：:]\s*([^\n]+)/);
   if(priceMatch)document.getElementById('fPrice').value=priceMatch[1].trim();
-  const numMatch=t.match(/(?:目前)?人数[：:]\s*(\d+)\s*(?:[/＝=]\s*(\d+))?/);
-  if(numMatch){
-    document.getElementById('fCur').value=numMatch[1];
-    if(numMatch[2]) document.getElementById('fTotal').value=numMatch[2];
+  const numLine=(t.match(/(?:目前)?人数[：:][^\n]*/) || [''])[0];
+  const gap=numLine.match(/[=＝]\s*(\d+)/);
+  const slash=numLine.match(/(\d+)\s*[/／]\s*(\d+)/);
+  const both=numLine.match(/(\d+)\s*[=＝]\s*(\d+)/);
+  if(slash){
+    document.getElementById('fCur').value=slash[1];
+    document.getElementById('fTotal').value=slash[2];
+  } else if(both){
+    document.getElementById('fCur').value=both[1];
+    document.getElementById('fTotal').value=both[2];
+  } else if(gap){
+    const total=6;
+    const left=+gap[1];
+    document.getElementById('fTotal').value=total;
+    document.getElementById('fCur').value=Math.max(0, total-left);
+  } else {
+    const only=numLine.match(/(\d+)/);
+    if(only){
+      document.getElementById('fCur').value=only[1];
+      document.getElementById('fTotal').value=6;
+    }
   }
   const hostMatch=t.match(/(?:发起人|车头|主持|DM)[：:]\s*([^\n]+)/i);
   if(hostMatch)document.getElementById('fHost').value=hostMatch[1].trim();
@@ -1298,7 +1315,6 @@ bindTap(document.getElementById('navMy'), () => go('my'));
 bindTap(document.getElementById('navDone'), () => go('done'));
 bindTap(document.getElementById('navCal'), () => go('cal'));
 bindTap(document.getElementById('navLegal'), () => go('legal'));
-bindTap(document.getElementById('pubLegal'), () => { closePub(); go('legal'); });
 bindTap(document.getElementById('calPrev'), () => shiftCal(-1));
 bindTap(document.getElementById('calNext'), () => shiftCal(1));
 bindTap(document.getElementById('authBtn'), () => submitAuth());
