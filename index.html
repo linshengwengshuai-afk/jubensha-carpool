@@ -275,6 +275,7 @@ function friendlyError(err) {
   if (/Invalid login credentials/i.test(m)) return '邮箱或密码不正确';
   if (/already registered|already been registered/i.test(m)) return '这个邮箱已经注册过了，直接登录即可';
   if (/Email not confirmed/i.test(m)) return '邮箱还没确认。如果已关闭确认，请稍后再试';
+  if (/list_carpools|create_carpool|function public/i.test(m)) return '数据库权限还没升级。请先在 Supabase 的 SQL Editor 运行 rls.sql';
   return m || '操作失败，请稍后再试';
 }
 
@@ -473,7 +474,7 @@ async function load(silent){
   if (!silent) showToast('加载拼车…');
   let data, error;
   try {
-    const res = await db.from('carpools').select('*').order('id',{ascending:false});
+    const res = await db.rpc('list_carpools');
     data = res.data;
     error = res.error;
   } catch (e) {
@@ -484,7 +485,7 @@ async function load(silent){
     if (!silent) customAlert(friendlyError(error));
     return;
   }
-  cars=[...fake,...(data||[])];
+  cars=[...fake,...(Array.isArray(data)?data:(data||[]))];
   render();
 }
 
@@ -565,15 +566,13 @@ async function join(id){
 async function finishJoin(id, wx){
   const c=cars.find(x=>x.id===id);
   if(!c)return;
+  if(!c.creator_id && Number(c.id) >= 9000){customAlert('这是示例局，不能上车');return}
   if(c.current_count>=c.total_count){customAlert('已满');return}
   showToast('上车中…');
-  const members = Array.isArray(c.members) ? [...c.members] : [];
   const un = user.user_metadata?.username || user.email?.split('@')[0] || '玩家';
-  members.push({ name: un, contact: wx, isHost: false, user_id: user.id });
-  const newCount = (c.current_count || 0) + 1;
   let error;
   try {
-    const res = await db.from('carpools').update({ current_count: newCount, members }).eq('id', id);
+    const res = await db.rpc('join_carpool', { p_id: id, p_name: un, p_contact: wx });
     error = res.error;
   } catch (e) { error = e; }
   hideToast();
@@ -585,23 +584,16 @@ async function finishJoin(id, wx){
 // 下车
 async function leave(id){
   customConfirm('确定下车？', async () => {
-    const c=cars.find(x=>x.id===id);
-    if(!c)return;
-    const myWx = getMyWx();
-    const myName = user.user_metadata?.username || user.email?.split('@')[0] || '';
-    let members = Array.isArray(c.members) ? [...c.members] : [];
-    members = members.filter(m => !(
-      !m.isHost && (
-        m.user_id === user.id ||
-        m.name === myName ||
-        (myWx && m.contact === myWx)
-      )
-    ));
-    const newCount = Math.max(1, (c.current_count || 1) - 1);
-    const {error}=await db.from('carpools').update({current_count:newCount,members}).eq('id',id);
+    showToast('下车中…');
+    let error;
+    try {
+      const res = await db.rpc('leave_carpool', { p_id: id });
+      error = res.error;
+    } catch (e) { error = e; }
+    hideToast();
     if(error)return customAlert(friendlyError(error));
     customAlert('已下车');
-    load();
+    load(true);
   });
 }
 
@@ -610,12 +602,16 @@ async function kickMember(carId, idx) {
   const c = cars.find(x => x.id == carId);
   if (!c || !Array.isArray(c.members) || !c.members[idx] || c.members[idx].isHost) return;
   customConfirm(`确定移除「${c.members[idx].name}」？`, async () => {
-    const members = c.members.filter((_, i) => i !== idx);
-    const newCount = Math.max(1, (c.current_count || 1) - 1);
-    const { error } = await db.from('carpools').update({ current_count: newCount, members }).eq('id', carId);
+    showToast('移除中…');
+    let error;
+    try {
+      const res = await db.rpc('kick_carpool_member', { p_id: carId, p_index: idx });
+      error = res.error;
+    } catch (e) { error = e; }
+    hideToast();
     if (error) return customAlert(friendlyError(error));
     customAlert('已移除');
-    load();
+    load(true);
   });
 }
 
@@ -625,7 +621,7 @@ function editCount(id){
   if(!c)return;
   customPrompt('新的总需人数', c.total_count, async (n) => {
     if(!n||isNaN(+n)) return customAlert('请输入数字');
-    const {error}=await db.from('carpools').update({total_count:+n}).eq('id',id);
+    const {error}=await db.rpc('set_carpool_total', { p_id: id, p_total: +n });
     if(error)return customAlert(friendlyError(error));
     load();
   });
@@ -633,7 +629,8 @@ function editCount(id){
 
 async function del(id){
   customConfirm('确定解散并删除这个拼车？', async () => {
-    await db.from('carpools').delete().eq('id',id);
+    const {error}=await db.rpc('delete_carpool', { p_id: id });
+    if(error)return customAlert(friendlyError(error));
     customAlert('已解散');
     load();
   });
@@ -717,7 +714,7 @@ document.getElementById('pubForm').onsubmit=async e=>{
   showToast('正在发布…');
   let data, error;
   try {
-    const res = await db.from('carpools').insert([payload]).select();
+    const res = await db.rpc('create_carpool', { p: payload });
     data = res.data;
     error = res.error;
   } catch (err) {
