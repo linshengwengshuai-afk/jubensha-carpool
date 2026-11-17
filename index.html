@@ -46,6 +46,9 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .filters::-webkit-scrollbar{display:none}
 .f{background:var(--card);border:1px solid var(--line);color:var(--sub);padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;white-space:nowrap}
 .f.on{background:var(--accent);color:#000;border-color:var(--accent)}
+.tag-picks{display:flex;flex-wrap:wrap;gap:8px}
+.tag-pick{background:#0d0d0d;border:1px solid var(--line);color:var(--sub);padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer}
+.tag-pick.on{background:var(--accent);color:#000;border-color:var(--accent)}
 .grid{display:grid;grid-template-columns:1fr;gap:12px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
 .card-title{font-size:16px;font-weight:600;margin-bottom:8px}
@@ -196,9 +199,11 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
   <div class="filters">
     <span class="f on" onclick="setF('全部',this)">全部</span>
     <span class="f" onclick="setF('推理',this)">推理</span>
-    <span class="f" onclick="setF('恐怖',this)">恐怖</span>
-    <span class="f" onclick="setF('机制',this)">机制</span>
+    <span class="f" onclick="setF('还原',this)">还原</span>
     <span class="f" onclick="setF('欢乐',this)">欢乐</span>
+    <span class="f" onclick="setF('机制',this)">机制</span>
+    <span class="f" onclick="setF('恐怖',this)">恐怖</span>
+    <span class="f" onclick="setF('跑团',this)">跑团</span>
   </div>
   <div class="grid" id="list"></div>
   <p class="square-legal" id="listDisclaimer"><button type="button" id="openDisclaimerList">免责声明</button></p>
@@ -344,7 +349,17 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
           <div class="field"><label>人均金额</label><input id="fPrice" placeholder="98 / AA"></div>
           <div class="field"><label>发起人</label><input id="fHost" placeholder="例如：陈大明"></div>
         </div>
-        <div class="field"><label>标签</label><input id="fTags" placeholder="推理 硬核"></div>
+        <div class="field">
+          <label>分类（可多选）</label>
+          <div class="tag-picks" id="tagPicks">
+            <button type="button" class="tag-pick" data-tag="推理">推理</button>
+            <button type="button" class="tag-pick" data-tag="还原">还原</button>
+            <button type="button" class="tag-pick" data-tag="欢乐">欢乐</button>
+            <button type="button" class="tag-pick" data-tag="机制">机制</button>
+            <button type="button" class="tag-pick" data-tag="恐怖">恐怖</button>
+            <button type="button" class="tag-pick" data-tag="跑团">跑团</button>
+          </div>
+        </div>
         <div class="field"><label>微信号（已绑定则自动带入）</label><input id="fWx" placeholder="例如：wx_123456"></div>
         <div class="field qr-field">
           <label>群二维码（可选）</label>
@@ -501,7 +516,7 @@ function isMyJoined(c) {
 }
 
 const fake = [
-  {id:9001, script_name:'无人生还', game_time:'今晚 19:30', location:'徐汇 · 密室空间', total_count:6, current_count:4, price:'98', host:'阿白', tags:['推理','硬核'], creator_id:null, contact:'wx_abai', members:[{name:'阿白',contact:'wx_abai',isHost:true}]},
+  {id:9001, script_name:'无人生还', game_time:'今晚 19:30', location:'徐汇 · 密室空间', total_count:6, current_count:4, price:'98', host:'阿白', tags:['推理','还原'], creator_id:null, contact:'wx_abai', members:[{name:'阿白',contact:'wx_abai',isHost:true}]},
   {id:9002, script_name:'恐怖游轮', game_time:'明天 14:00', location:'静安 · 黑匣子', total_count:5, current_count:3, price:'AA', host:'夜行', tags:['恐怖'], creator_id:null, contact:'wx_night', members:[{name:'夜行',contact:'wx_night',isHost:true}]},
   {id:9003, script_name:'年轮', game_time:'周六 15:00', location:'浦东 · 剧本社', total_count:7, current_count:5, price:'108', host:'林', tags:['机制','欢乐'], creator_id:null, contact:'wx_lin', members:[{name:'林',contact:'wx_lin',isHost:true}]},
   {id:9004, script_name:'第七号嫌疑人', game_time:'今晚 20:00', location:'黄浦 · 老房子', total_count:6, current_count:2, price:'88', host:'侦探', tags:['推理'], creator_id:null, contact:'wx_detective', members:[{name:'侦探',contact:'wx_detective',isHost:true}]}
@@ -509,12 +524,24 @@ const fake = [
 
 function showList(){
   document.getElementById('listSection').style.display='block';
+  syncDisclaimer(true);
   render();
   const el = document.getElementById('listSection');
   const top = el.getBoundingClientRect().top + window.pageYOffset - 8;
   window.scrollTo(0, top);
 }
+function syncDisclaimer(listOpen){
+  const onSquare = page === 'square';
+  document.getElementById('squareLegal').style.display = (onSquare && !listOpen) ? 'block' : 'none';
+  document.getElementById('listDisclaimer').style.display = (onSquare && listOpen) ? 'block' : 'none';
+}
 function openDisclaimer(){ document.getElementById('legalModal').style.display='flex'; }
+function selectedTags(){
+  return [...document.querySelectorAll('#tagPicks .tag-pick.on')].map((b) => b.dataset.tag);
+}
+function clearTags(){
+  document.querySelectorAll('#tagPicks .tag-pick').forEach((b) => b.classList.remove('on'));
+}
 function closeDisclaimer(){ document.getElementById('legalModal').style.display='none'; }
 
 function openAuth(){document.getElementById('authModal').style.display='flex';upd()}
@@ -909,8 +936,7 @@ function go(p){
   const calOn = p==='cal';
   document.getElementById('listSection').style.display = (p==='my' || p==='done') ? 'block' : 'none';
   document.getElementById('calSection').style.display = calOn ? 'block' : 'none';
-  document.getElementById('squareLegal').style.display = p==='square' ? 'block' : 'none';
-  document.getElementById('listDisclaimer').style.display = p==='square' ? 'block' : 'none';
+  syncDisclaimer(false);
   const hero=document.querySelector('.hero');
   const actions=document.querySelector('.actions');
   const notice=document.querySelector('.notice');
@@ -998,6 +1024,7 @@ async function publishCar(){
   if(['情感','沉浸','哭哭','演绎','立意','还泪'].some(k=>name.includes(k))){say('禁止情感类');return}
   if(!(total>=1)){say('总需人数要大于 0');return}
   if(!(cur>=1) || cur>total){say('当前已有要大于 0，且不能大于总人数');return}
+  if(!selectedTags().length){say('请选择分类');return}
   if(cur>=total){say('这辆车已经满了，发到广场后别人看不到。请把「当前已有」改得比总人数少。');return}
   const un = user.user_metadata?.username || user.email?.split('@')[0] || '玩家';
   const payload = {
@@ -1010,7 +1037,7 @@ async function publishCar(){
     price: document.getElementById('fPrice').value.trim(),
     host: un,
     contact: wx,
-    tags: document.getElementById('fTags').value.trim().split(/\s+/).filter(Boolean),
+    tags: selectedTags(),
     members: [{ name: un, contact: wx, isHost: true, user_id: user.id }],
     creator_id: user.id,
     qr_image: qrBase64 || null
@@ -1035,6 +1062,7 @@ async function publishCar(){
   errEl.innerText = '';
   qrBase64 = '';
   document.getElementById('pubForm').reset();
+  clearTags();
   document.getElementById('groupPreview').style.display = 'none';
   closePub();
   page = 'square';
@@ -1128,6 +1156,12 @@ function smartParse(){
   else document.getElementById('fHost').value='';
   const wxMatch=t.match(/微信[：:]\s*([^\n\s]+)/);
   if(wxMatch)document.getElementById('fWx').value=wxMatch[1].trim();
+  const tagLine=(t.match(/标签[：:][^\n]*/) || [''])[0];
+  if(tagLine){
+    document.querySelectorAll('#tagPicks .tag-pick').forEach((el) => {
+      el.classList.toggle('on', tagLine.includes(el.dataset.tag));
+    });
+  }
   customAlert('已识别，请核对日期和时刻');
 }
 
@@ -1430,6 +1464,10 @@ bindTap(document.getElementById('calNext'), () => shiftCal(1));
 bindTap(document.getElementById('authBtn'), () => submitAuth());
 bindTap(document.getElementById('profileSave'), () => saveProfile());
 bindTap(document.getElementById('pubBtn'), () => publishCar());
+document.getElementById('tagPicks').addEventListener('click', (e) => {
+  const btn = e.target.closest('.tag-pick');
+  if (btn) btn.classList.toggle('on');
+});
 bindTap(document.getElementById('chatClose'), () => closeChat());
 bindTap(document.getElementById('chatSend'), () => sendChat());
 document.getElementById('chatInput').addEventListener('keydown', (e) => {
