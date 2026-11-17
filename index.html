@@ -268,7 +268,13 @@ const SUPABASE_URL = 'https://mfdeckoqqyvihvwzukus.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGVja29xcXl2aWh2d3p1a3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Nzc2NzQsImV4cCI6MjEwMzE1MzY3NH0.MDVvtjnq99N294og4lvH2oFCHuif8pdHIEMr4EYwl9Q';
 let db, cars = [], filter = '全部', user = null, isReg = false, page = 'square', myTab = 'joined', doneRole = 'all';
 
-// 微信号跟账号走（user_metadata.wechat），本地只做缓存
+// 微信号存在账号里的 profiles 表。localStorage 只是这台手机的缓存。
+function rememberWx(val) {
+  if (!user || !user.id) return;
+  user.user_metadata = user.user_metadata || {};
+  user.user_metadata.wechat = val;
+  localStorage.setItem('MY_WX_' + user.id, val);
+}
 function getMyWx() {
   const meta = user?.user_metadata?.wechat || '';
   if (meta) return meta;
@@ -277,9 +283,37 @@ function getMyWx() {
 async function setMyWx(wx) {
   if (!user) return;
   const val = (wx || '').trim();
-  localStorage.setItem('MY_WX_' + user.id, val);
+  if (!val) return;
+  rememberWx(val);
+  if (!db || user.id === 'demo-user') return;
+  try {
+    await withTimeout(db.rpc('save_profile', {
+      p_username: user.user_metadata?.username || null,
+      p_wechat: val
+    }), 8000);
+  } catch (e) {}
+}
+async function loadProfile() {
+  if (!db || !user || user.id === 'demo-user') return;
+  let data, error;
+  try {
+    const res = await withTimeout(db.rpc('my_profile'), 8000);
+    data = res.data;
+    error = res.error;
+  } catch (e) {
+    error = e;
+  }
+  if (error) return;
   user.user_metadata = user.user_metadata || {};
-  user.user_metadata.wechat = val;
+  const serverName = (data && data.username) || '';
+  const serverWx = (data && data.wechat) || '';
+  if (serverName) user.user_metadata.username = serverName;
+  if (serverWx) rememberWx(serverWx);
+  else {
+    const localWx = localStorage.getItem('MY_WX_' + user.id) || '';
+    if (localWx) setMyWx(localWx);
+  }
+  upd();
 }
 
 function friendlyError(err) {
@@ -293,6 +327,8 @@ function friendlyError(err) {
   if (/Password should be|password/i.test(m) && /6|least|short/i.test(m)) return '密码至少 6 位';
   if (/当前人数不正确/.test(m)) return '当前已有要大于 0，且不能大于总人数。满员的车不会出现在广场';
   if (/ambiguous/i.test(m)) return '数据库函数有列名冲突。请在 Supabase SQL Editor 运行最新的修复 SQL';
+  if (/save_profile|my_profile/i.test(m)) return '微信号还没能存进账号。请先在 Supabase SQL Editor 运行 profiles.sql';
+  if (/list_carpools|create_carpool|function public/i.test(m)) return '数据库权限还没升级。请先在 Supabase 的 SQL Editor 运行 rls.sql';
   if (/list_carpools|create_carpool|function public/i.test(m)) return '数据库权限还没升级。请先在 Supabase 的 SQL Editor 运行 rls.sql';
   return m || '操作失败，请稍后再试';
 }
@@ -462,12 +498,14 @@ async function init(){
   if (session) user = session.user;
   else if (localStorage.getItem('DEMO_USER')) user = { id: 'demo-user', user_metadata: { username: '测试用户' }, email: 'test@carpool.local' };
   upd();
+  loadProfile();
   load();
 
   db.auth.onAuthStateChange((_, s) => {
     if (s && s.user) user = s.user;
     else if (!localStorage.getItem('DEMO_USER')) user = null;
     upd();
+    loadProfile();
     load(true);
   });
 
@@ -512,6 +550,7 @@ async function submitAuth(){
   }
   user=data.session.user;
   upd();
+  loadProfile();
   tip.innerText=isReg?'注册成功':'登录成功';
   setTimeout(closeAuth,400);
 }
@@ -533,8 +572,11 @@ async function saveProfile(){
   btn.innerText = '保存中…';
   user.user_metadata=user.user_metadata||{};
   user.user_metadata.username=name;
-  user.user_metadata.wechat=wx;
-  if(user.id) localStorage.setItem('MY_WX_' + user.id, wx);
+  if (wx) rememberWx(wx);
+  else {
+    user.user_metadata.wechat='';
+    if (user.id) localStorage.removeItem('MY_WX_' + user.id);
+  }
   upd();
   if(user.id==='demo-user' || !db){
     btn.disabled = false;
@@ -545,7 +587,7 @@ async function saveProfile(){
   }
   let error;
   try {
-    const res = await withTimeout(db.auth.updateUser({data:{username:name, wechat:wx}}), 8000);
+    const res = await withTimeout(db.rpc('save_profile', { p_username: name, p_wechat: wx }), 8000);
     error = res.error;
   } catch (e) {
     error = e;
