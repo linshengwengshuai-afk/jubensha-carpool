@@ -250,7 +250,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 <script>
 const SUPABASE_URL = 'https://mfdeckoqqyvihvwzukus.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGVja29xcXl2aWh2d3p1a3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1Nzc2NzQsImV4cCI6MjEwMzE1MzY3NH0.MDVvtjnq99N294og4lvH2oFCHuif8pdHIEMr4EYwl9Q';
-let db, cars = [], filter = '全部', user = null, isReg = false, page = 'square', myTab = 'joined';
+let db, cars = [], filter = '全部', user = null, isReg = false, page = 'square', myTab = 'joined', myFull = false;
 
 // 微信号跟账号走（user_metadata.wechat），本地只做缓存
 function getMyWx() {
@@ -294,6 +294,11 @@ function hideToast() {
 // 判断是否是我发起的车
 function isMyCreated(c) {
   return user && c.creator_id === user.id;
+}
+
+function isFull(c){
+  const total = c.total_count || 0;
+  return total > 0 && (c.current_count || 0) >= total;
 }
 
 // 判断是否是我上过的车（优先用 user_id，兼容旧数据）
@@ -500,13 +505,19 @@ function render(){
     }else{
       list=list.filter(c=>isMyCreated(c));
     }
+    list=list.filter(c=>myFull ? isFull(c) : !isFull(c));
+  } else {
+    list=list.filter(c=>!isFull(c));
   }
   list=list.filter(c=>{
     const t=((c.script_name||'')+(c.location||'')+(c.host||'')).toLowerCase();
     return(!q||t.includes(q))&&(filter==='全部'||(c.tags||[]).some(x=>String(x).includes(filter)));
   });
   const el=document.getElementById('list');
-  el.innerHTML=list.length?'':'<div class="empty">暂无拼车</div>';
+  const emptyText = page==='my'
+    ? (myFull ? '还没有已满的历史车辆' : '暂无进行中的车')
+    : '暂无未满的拼车';
+  el.innerHTML=list.length?'':'<div class="empty">'+emptyText+'</div>';
   list.forEach(c=>{
     const need=Math.max(0,(c.total_count||0)-(c.current_count||0));
     const mine=isMyCreated(c);
@@ -661,25 +672,46 @@ function go(p){
       sub.id='mySub';
       sub.className='my-subtabs';
       sub.innerHTML=`
-        <button class="on" onclick="setMyTab('joined',this)">我上的车</button>
-        <button onclick="setMyTab('created',this)">我组的车</button>
+        <button class="${myTab==='joined'?'on':''}" onclick="setMyTab('joined',this)">我上的车</button>
+        <button class="${myTab==='created'?'on':''}" onclick="setMyTab('created',this)">我组的车</button>
       `;
       document.querySelector('.wrap').insertBefore(sub,document.querySelector('.wrap').firstChild);
     }
     sub.style.display='flex';
+    let hist=document.getElementById('myHist');
+    if(!hist){
+      hist=document.createElement('div');
+      hist.id='myHist';
+      hist.className='my-subtabs';
+      document.querySelector('.wrap').insertBefore(hist, sub.nextSibling);
+    }
+    hist.innerHTML=`
+      <button class="${myFull?'':'on'}" onclick="setMyFull(false,this)">进行中</button>
+      <button class="${myFull?'on':''}" onclick="setMyFull(true,this)">已满历史</button>
+    `;
+    hist.style.display='flex';
   }else{
     hero.style.display='block';
     actions.style.display='flex';
     notice.style.display='block';
     const sub=document.getElementById('mySub');
     if(sub)sub.style.display='none';
+    const hist=document.getElementById('myHist');
+    if(hist)hist.style.display='none';
   }
   render();
 }
 
 function setMyTab(t,el){
   myTab=t;
-  document.querySelectorAll('.my-subtabs button').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('#mySub button').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  render();
+}
+
+function setMyFull(full, el){
+  myFull=full;
+  document.querySelectorAll('#myHist button').forEach(x=>x.classList.remove('on'));
   el.classList.add('on');
   render();
 }
