@@ -292,7 +292,7 @@ function friendlyError(err) {
   if (/rate limit|too many/i.test(m)) return '操作太频繁，请等一两分钟再试';
   if (/Password should be|password/i.test(m) && /6|least|short/i.test(m)) return '密码至少 6 位';
   if (/当前人数不正确/.test(m)) return '当前已有要大于 0，且不能大于总人数。满员的车不会出现在广场';
-  if (/请先登录/.test(m)) return '登录已失效，请退出后重新登录再发布';
+  if (/ambiguous/i.test(m)) return '数据库函数有列名冲突。请在 Supabase SQL Editor 运行最新的修复 SQL';
   if (/list_carpools|create_carpool|function public/i.test(m)) return '数据库权限还没升级。请先在 Supabase 的 SQL Editor 运行 rls.sql';
   return m || '操作失败，请稍后再试';
 }
@@ -715,15 +715,19 @@ async function kickMember(carId, idx) {
   });
 }
 
-// 车头改总人数
+// 车头改人数：先改当前已有（有人下车就改小），再改总需
 function editCount(id){
   const c=cars.find(x=>x.id===id);
   if(!c)return;
-  customPrompt('新的总需人数', c.total_count, async (n) => {
-    if(!n||isNaN(+n)) return customAlert('请输入数字');
-    const {error}=await db.rpc('set_carpool_total', { p_id: id, p_total: +n });
-    if(error)return customAlert(friendlyError(error));
-    load();
+  customPrompt('当前已有人数。有人下车就改小', c.current_count, (cur) => {
+    if(cur==null||cur===''||isNaN(+cur)) return customAlert('请输入数字');
+    customPrompt('总需人数', c.total_count, async (n) => {
+      if(!n||isNaN(+n)) return customAlert('请输入数字');
+      const {error}=await db.rpc('set_carpool_total', { p_id: id, p_total: +n, p_current: +cur });
+      if(error)return customAlert(friendlyError(error));
+      customAlert('人数已更新');
+      load();
+    });
   });
 }
 
