@@ -77,6 +77,11 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .done-filters{display:flex;gap:8px;justify-content:center;margin-top:12px}
 .done-filters button{background:transparent;border:1px solid var(--line);color:var(--sub);padding:6px 14px;border-radius:999px;font-size:13px;cursor:pointer;outline:none}
 .done-filters button.on{background:var(--accent);color:#000;border-color:var(--accent)}
+.radar{position:relative;height:280px;background:#111;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.radar svg{width:100%;height:100%;display:block}
+.shop-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.shop-card b{font-size:15px}
+.shop-meta{color:var(--sub);font-size:12px;margin-top:4px;line-height:1.5}
 .member-list{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.6}
 .member-list .host{color:var(--accent)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#1c1c1c;border:1px solid #333;color:#ddd;padding:10px 16px;border-radius:999px;font-size:13px;z-index:400;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
@@ -112,6 +117,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <button class="on" id="navSquare" onclick="go('square')">广场</button>
     <button id="navMy" onclick="go('my')">我的</button>
     <button id="navDone" onclick="go('done')">拼成</button>
+    <button id="navShops" onclick="go('shops')">店家</button>
   </div>
   <h1>拼车 <span style="color:#4ade80;font-size:12px">v4</span></h1>
   <span class="user" id="userTag" onclick="openAuth()">登录</span>
@@ -155,6 +161,25 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <span class="f" onclick="setF('欢乐',this)">欢乐</span>
   </div>
   <div class="grid" id="list"></div>
+</div>
+
+<div class="wrap" id="shopSection" style="display:none">
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+    <button class="btn" type="button" id="locBtn">定位我的位置</button>
+    <button class="btn-o" type="button" id="addShopBtn">收录一家店</button>
+  </div>
+  <p id="locStatus" style="font-size:12px;color:#888;margin-bottom:10px">还没有定位。微信里通常拿不到位置，请用手机浏览器打开。</p>
+  <div class="radar" id="shopRadar"></div>
+  <p style="font-size:12px;color:#666;margin:8px 0 12px">圆点是直线距离，不是走路路线。点「导航」会打开高德地图。</p>
+  <div id="shopList"></div>
+  <form id="shopForm" style="display:none;margin-top:8px">
+    <div class="field"><label>店名</label><input id="shopName" placeholder="例如：炸蛋推理社"></div>
+    <div class="field"><label>区域</label><input id="shopArea" placeholder="例如：南山"></div>
+    <div class="field"><label>地址</label><input id="shopAddr" placeholder="写到楼层，方便别人找"></div>
+    <p id="shopCoord" style="font-size:12px;color:#888;min-height:18px">坐标：还没记下。请站在店里再定位。</p>
+    <button class="btn-o" type="button" id="shopLocBtn" style="width:100%">用我现在的位置作为店的坐标</button>
+    <button class="btn" type="button" id="shopSaveBtn" style="width:100%;margin-top:8px">保存到店家库</button>
+  </form>
 </div>
 
 <!-- 登录/注册 -->
@@ -330,6 +355,7 @@ function friendlyError(err) {
   if (/发车日期/.test(m)) return m;
   if (/ambiguous/i.test(m)) return '数据库函数有列名冲突。请在 Supabase SQL Editor 运行最新的修复 SQL';
   if (/save_profile|my_profile/i.test(m)) return '微信号还没能存进账号。请先在 Supabase SQL Editor 运行 profiles.sql';
+  if (/list_shops|create_shop|shops/i.test(m)) return '店家库还没建好。请先在 Supabase SQL Editor 运行 shops.sql';
   if (/list_carpools|create_carpool|function public/i.test(m)) return '数据库权限还没升级。请先在 Supabase 的 SQL Editor 运行 rls.sql';
   if (/list_carpools|create_carpool|function public/i.test(m)) return '数据库权限还没升级。请先在 Supabase 的 SQL Editor 运行 rls.sql';
   return m || '操作失败，请稍后再试';
@@ -800,7 +826,10 @@ function go(p){
   document.getElementById('navSquare').classList.toggle('on',p==='square');
   document.getElementById('navMy').classList.toggle('on',p==='my');
   document.getElementById('navDone').classList.toggle('on',p==='done');
-  document.getElementById('listSection').style.display='block';
+  document.getElementById('navShops').classList.toggle('on',p==='shops');
+  const shopOn = p==='shops';
+  document.getElementById('listSection').style.display = shopOn ? 'none' : 'block';
+  document.getElementById('shopSection').style.display = shopOn ? 'block' : 'none';
   const hero=document.querySelector('.hero');
   const actions=document.querySelector('.actions');
   const notice=document.querySelector('.notice');
@@ -808,8 +837,10 @@ function go(p){
   hero.style.display = browsing ? 'block' : 'none';
   actions.style.display = browsing ? 'flex' : 'none';
   notice.style.display = browsing ? 'block' : 'none';
+  if (!shopOn) {
   document.getElementById('searchInput').style.display = p==='done' ? 'none' : 'block';
   document.querySelector('.filters').style.display = browsing ? 'flex' : 'none';
+  }
 
   let tabs=document.getElementById('myTabs');
   if(!tabs){
@@ -842,6 +873,7 @@ function go(p){
   }
   done.style.display = p==='done' ? 'block' : 'none';
   syncDoneFilters();
+  if (shopOn) { loadShops(); return; }
   render();
 }
 
@@ -1087,6 +1119,199 @@ document.getElementById('fGroup').onchange = e => {
   r.readAsDataURL(f);
 };
 
+let shops = [];
+let myPos = null;
+let shopPin = null;
+
+function haversine(a, b) {
+  const R = 6371;
+  const dLat = (b.lat - a.lat) * Math.PI / 180;
+  const dLng = (b.lng - a.lng) * Math.PI / 180;
+  const s = Math.sin(dLat / 2) ** 2
+    + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+}
+function bearing(a, b) {
+  const y = Math.sin((b.lng - a.lng) * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180);
+  const x = Math.cos(a.lat * Math.PI / 180) * Math.sin(b.lat * Math.PI / 180)
+    - Math.sin(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.cos((b.lng - a.lng) * Math.PI / 180);
+  return Math.atan2(y, x);
+}
+function esc(s) {
+  return String(s || '').replace(/[&<>"]/g, (c) => {
+    if (c === '&') return '&' + 'amp;';
+    if (c === '<') return '&' + 'lt;';
+    if (c === '>') return '&' + 'gt;';
+    return '&' + 'quot;';
+  });
+}
+function fmtDist(km) {
+  if (km < 1) return Math.round(km * 1000) + ' 米';
+  return (km < 10 ? km.toFixed(1) : Math.round(km)) + ' 公里';
+}
+function askLocation(ok) {
+  if (!navigator.geolocation) {
+    customAlert('这个浏览器不支持定位。请用 Safari 或 Chrome 打开。');
+    return;
+  }
+  showToast('正在定位…');
+  navigator.geolocation.getCurrentPosition((pos) => {
+    hideToast();
+    ok({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+  }, () => {
+    hideToast();
+    customAlert('没有拿到位置。请允许定位。微信里通常不行，请点右上角用浏览器打开。');
+  }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+}
+function locateMe() {
+  askLocation((pos) => {
+    myPos = pos;
+    const el = document.getElementById('locStatus');
+    el.innerText = '已定位。下面按离你的直线距离排序。';
+    renderShops();
+  });
+}
+function wgsToGcj(lat, lng) {
+  const a = 6378245.0;
+  const ee = 0.00669342162296594323;
+  function tLat(x, y) {
+    let r = -100 + 2 * x + 3 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
+    r += (20 * Math.sin(6 * x * Math.PI) + 20 * Math.sin(2 * x * Math.PI)) * 2 / 3;
+    r += (20 * Math.sin(y * Math.PI) + 40 * Math.sin(y / 3 * Math.PI)) * 2 / 3;
+    r += (160 * Math.sin(y / 12 * Math.PI) + 320 * Math.sin(y * Math.PI / 30)) * 2 / 3;
+    return r;
+  }
+  function tLng(x, y) {
+    let r = 300 + x + 2 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
+    r += (20 * Math.sin(6 * x * Math.PI) + 20 * Math.sin(2 * x * Math.PI)) * 2 / 3;
+    r += (20 * Math.sin(x * Math.PI) + 40 * Math.sin(x / 3 * Math.PI)) * 2 / 3;
+    r += (150 * Math.sin(x / 12 * Math.PI) + 300 * Math.sin(x / 30 * Math.PI)) * 2 / 3;
+    return r;
+  }
+  let dLat = tLat(lng - 105, lat - 35);
+  let dLng = tLng(lng - 105, lat - 35);
+  const rad = lat / 180 * Math.PI;
+  let magic = Math.sin(rad);
+  magic = 1 - ee * magic * magic;
+  const sqrtMagic = Math.sqrt(magic);
+  dLat = dLat * 180 / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
+  dLng = dLng * 180 / (a / sqrtMagic * Math.cos(rad) * Math.PI);
+  return { lat: lat + dLat, lng: lng + dLng };
+}
+function navShop(lat, lng, name) {
+  const g = wgsToGcj(lat, lng);
+  const url = 'https://uri.amap.com/marker?position=' + g.lng + ',' + g.lat
+    + '&name=' + encodeURIComponent(name) + '&src=carpool&coordinate=gaode';
+  window.open(url, '_blank');
+}
+function navShopById(id) {
+  const s = shops.find((x) => Number(x.id) === Number(id));
+  if (!s) return;
+  navShop(Number(s.lat), Number(s.lng), s.name || '剧本杀店');
+}
+async function loadShops() {
+  if (!db) return;
+  let data, error;
+  try {
+    const res = await withTimeout(db.rpc('list_shops'), 8000);
+    data = res.data;
+    error = res.error;
+  } catch (e) { error = e; }
+  if (error) {
+    document.getElementById('shopList').innerHTML = '<div class="empty">' + friendlyError(error) + '</div>';
+    return;
+  }
+  shops = Array.isArray(data) ? data : [];
+  renderShops();
+}
+function renderShops() {
+  const origin = myPos || { lat: 22.5431, lng: 114.0579 };
+  const ranked = shops.map((s) => ({
+    ...s,
+    km: haversine(origin, { lat: Number(s.lat), lng: Number(s.lng) })
+  })).sort((a, b) => a.km - b.km);
+  const svg = document.getElementById('shopRadar');
+  const maxKm = 15;
+  const cx = 180, cy = 140, R = 110;
+  let dots = '';
+  ranked.forEach((s) => {
+    const ang = bearing(origin, { lat: Number(s.lat), lng: Number(s.lng) });
+    const d = Math.min(s.km, maxKm) / maxKm * R;
+    const x = cx + d * Math.sin(ang);
+    const y = cy - d * Math.cos(ang);
+    const label = esc(String(s.name || '').slice(0, 6));
+    dots += `<g><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="#4ade80"></circle><text x="${x.toFixed(1)}" y="${(y - 8).toFixed(1)}" text-anchor="middle" fill="#ccc" font-size="10">${label}</text></g>`;
+  });
+  svg.innerHTML = `<svg viewBox="0 0 360 280">
+    <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#2a2a2a"/>
+    <circle cx="${cx}" cy="${cy}" r="${R * 0.66}" fill="none" stroke="#222"/>
+    <circle cx="${cx}" cy="${cy}" r="${R * 0.33}" fill="none" stroke="#222"/>
+    <text x="${cx}" y="${cy - R - 6}" text-anchor="middle" fill="#555" font-size="10">15公里</text>
+    ${dots}
+    <circle cx="${cx}" cy="${cy}" r="4" fill="${myPos ? '#f59e0b' : '#666'}"></circle>
+    <text x="${cx}" y="${cy + 16}" text-anchor="middle" fill="#888" font-size="10">${myPos ? '我' : '深圳（未定位）'}</text>
+  </svg>`;
+  const list = document.getElementById('shopList');
+  if (!ranked.length) {
+    list.innerHTML = '<div class="empty">还没有店。登录后站在店里点「收录一家店」，别人就能看到离这里多远。</div>';
+    return;
+  }
+  list.innerHTML = ranked.map((s) => {
+    const mine = user && s.creator_id === user.id;
+    return `<div class="shop-card">
+      <b>${esc(s.name)}</b>
+      <div class="shop-meta">${s.area ? esc(s.area) + ' · ' : ''}${esc(s.address)}<br>${myPos ? '距你 ' + fmtDist(s.km) : '定位后显示距离'}</div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn" type="button" onclick="navShopById(${Number(s.id)})">导航</button>
+        ${mine ? `<button class="btn-o" type="button" onclick="removeShop(${s.id})">删除</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleShopForm() {
+  if (!user) return openAuth();
+  const form = document.getElementById('shopForm');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+function pinShop() {
+  if (!user) return openAuth();
+  askLocation((pos) => {
+    shopPin = pos;
+    document.getElementById('shopCoord').innerText = '坐标已记下：' + pos.lat.toFixed(5) + ', ' + pos.lng.toFixed(5);
+  });
+}
+async function saveShop() {
+  if (!user) return openAuth();
+  const name = document.getElementById('shopName').value.trim();
+  const area = document.getElementById('shopArea').value.trim();
+  const address = document.getElementById('shopAddr').value.trim();
+  if (!name || !address) return customAlert('店名和地址都要填');
+  if (!shopPin) return customAlert('请先站在店里，用当前位置记下坐标');
+  showToast('保存中…');
+  let error;
+  try {
+    const res = await withTimeout(db.rpc('create_shop', { p: {
+      name, area, address, lat: shopPin.lat, lng: shopPin.lng
+    }}), 8000);
+    error = res.error;
+  } catch (e) { error = e; }
+  hideToast();
+  if (error) return customAlert(friendlyError(error));
+  shopPin = null;
+  document.getElementById('shopForm').reset();
+  document.getElementById('shopCoord').innerText = '坐标：还没记下。请站在店里再定位。';
+  document.getElementById('shopForm').style.display = 'none';
+  customAlert('已收录');
+  loadShops();
+}
+async function removeShop(id) {
+  customConfirm('从店家库删除这家店？', async () => {
+    const { error } = await db.rpc('delete_shop', { p_id: id });
+    if (error) return customAlert(friendlyError(error));
+    loadShops();
+  });
+}
+
 bindTap(document.getElementById('actList'), () => showList());
 bindTap(document.getElementById('actPub'), () => openPub());
 bindTap(document.getElementById('actTarot'), () => openDailyTarot());
@@ -1094,6 +1319,11 @@ bindTap(document.getElementById('userTag'), () => openAuth());
 bindTap(document.getElementById('navSquare'), () => go('square'));
 bindTap(document.getElementById('navMy'), () => go('my'));
 bindTap(document.getElementById('navDone'), () => go('done'));
+bindTap(document.getElementById('navShops'), () => go('shops'));
+bindTap(document.getElementById('locBtn'), () => locateMe());
+bindTap(document.getElementById('addShopBtn'), () => toggleShopForm());
+bindTap(document.getElementById('shopLocBtn'), () => pinShop());
+bindTap(document.getElementById('shopSaveBtn'), () => saveShop());
 bindTap(document.getElementById('authBtn'), () => submitAuth());
 bindTap(document.getElementById('profileSave'), () => saveProfile());
 bindTap(document.getElementById('pubBtn'), () => publishCar());
@@ -1101,6 +1331,7 @@ document.getElementById('userTag').onclick = null;
 document.getElementById('navSquare').onclick = null;
 document.getElementById('navMy').onclick = null;
 document.getElementById('navDone').onclick = null;
+document.getElementById('navShops').onclick = null;
 
 window.addEventListener('DOMContentLoaded',init);
 </script>
