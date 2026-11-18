@@ -109,9 +109,11 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 .cal-week,.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal-week span{text-align:center;color:#666;font-size:12px;padding-bottom:4px}
 .cal-cell{background:#161616;border:1px solid #2a2a2a;border-radius:8px;min-height:48px;padding:4px 2px;text-align:center;color:#888;font-size:13px}
-.cal-cell.has{color:#f0f0f0}
-.cal-cell.on{border-color:#4ade80}
-.cal-cell.today .n{color:#4ade80}
+.cal-cell.has{color:#f0f0f0;border-color:#2f6b45}
+.cal-cell.on{border-color:#3a3a3a}
+.cal-cell.today .n{color:#bbb}
+.cal-cell.has.on,.cal-cell.has.today{border-color:#4ade80}
+.cal-cell.has .n,.cal-cell.has.today .n{color:#4ade80}
 .cal-cell .n{display:block;font-weight:600}
 .cal-cell .d{display:block;font-size:10px;color:#4ade80;margin-top:2px}
 .chat-list{max-height:46vh;overflow-y:auto;margin:4px 0 12px;display:flex;flex-direction:column;gap:14px}
@@ -914,6 +916,8 @@ async function del(id){
   customConfirm('确定解散并删除这个拼车？', async () => {
     const {error}=await db.rpc('delete_carpool', { p_id: id });
     if(error)return customAlert(friendlyError(error));
+    cars = cars.filter((c) => Number(c.id) !== Number(id));
+    if (page === 'cal') renderCal();
     customAlert('已解散');
     load();
   });
@@ -978,7 +982,7 @@ function go(p){
   }
   done.style.display = p==='done' ? 'block' : 'none';
   syncDoneFilters();
-  if (calOn) { renderCal(); return; }
+  if (calOn) { renderCal(); load(true); return; }
   render();
 }
 
@@ -1137,8 +1141,10 @@ function smartParse(){
     document.getElementById('fCur').value=slash[1];
     document.getElementById('fTotal').value=slash[2];
   } else if(both){
-    document.getElementById('fCur').value=both[1];
-    document.getElementById('fTotal').value=both[2];
+    const have=+both[1];
+    const left=+both[2];
+    document.getElementById('fCur').value=have;
+    document.getElementById('fTotal').value=have+left;
   } else if(gap){
     const total=6;
     const left=+gap[1];
