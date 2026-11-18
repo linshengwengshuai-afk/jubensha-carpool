@@ -321,7 +321,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 <!-- 发布拼车 -->
 <div id="pubModal" class="modal" style="display:none">
   <div class="modal-box wide">
-    <h3>发起拼车</h3>
+    <h3 id="pubTitle">发起拼车</h3>
     <div class="pub-grid">
       <div>
         <label style="font-size:12px;color:#888">粘贴群消息，例如：</label>
@@ -448,7 +448,7 @@ function friendlyError(err) {
   if (/save_profile|my_profile/i.test(m)) return '微信号还没能存进账号。请先在 Supabase SQL Editor 运行 profiles.sql';
   if (/list_car_messages|send_car_message|carpool_messages/i.test(m)) return '车内聊天还没建好。请先在 Supabase SQL Editor 运行 chat.sql';
   if (/只有车上的人|请输入内容|最多 200/.test(m)) return m;
-  if (/list_carpools|create_carpool|function public/i.test(m)) return '数据库权限还没升级。请先在 Supabase 的 SQL Editor 运行 rls.sql';
+  if (/update_carpool/i.test(m)) return '编辑还没装上。请先在 Supabase SQL Editor 运行编辑车辆的 SQL';
   return m || '操作失败，请稍后再试';
 }
 
@@ -551,15 +551,52 @@ function closeAuth(){document.getElementById('authModal').style.display='none'}
 function hkToday() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Hong_Kong' }).format(new Date());
 }
+let editingId = null;
 function openPub(){
   if(!user)return openAuth();
+  editingId = null;
+  document.getElementById('pubTitle').innerText = '发起拼车';
+  document.getElementById('pubBtn').innerText = '立即发布至广场';
   const savedWx = getMyWx();
   if(savedWx) document.getElementById('fWx').value = savedWx;
   const dateInput = document.getElementById('fDate');
   if (dateInput) dateInput.min = hkToday();
   document.getElementById('pubModal').style.display='flex';
 }
-function closePub(){document.getElementById('pubModal').style.display='none'}
+function closePub(){
+  document.getElementById('pubModal').style.display='none';
+  editingId = null;
+  document.getElementById('pubTitle').innerText = '发起拼车';
+  document.getElementById('pubBtn').innerText = '立即发布至广场';
+}
+function openEdit(id){
+  if(!user)return openAuth();
+  const c = cars.find((x) => Number(x.id) === Number(id));
+  if(!c) return;
+  editingId = Number(id);
+  document.getElementById('pubTitle').innerText = '编辑车辆';
+  document.getElementById('pubBtn').innerText = '保存修改';
+  document.getElementById('fName').value = c.script_name || '';
+  document.getElementById('fDate').value = carDateKey(c);
+  document.getElementById('fDate').min = hkToday();
+  document.getElementById('fTime').value = carClock(c);
+  document.getElementById('fLoc').value = c.location || '';
+  document.getElementById('fTotal').value = c.total_count || 6;
+  document.getElementById('fCur').value = c.current_count || 1;
+  document.getElementById('fPrice').value = c.price || '';
+  document.getElementById('fHost').value = c.host || '';
+  document.getElementById('fWx').value = c.contact || getMyWx() || '';
+  clearTags();
+  const tags = Array.isArray(c.tags) ? c.tags.map(String) : [];
+  document.querySelectorAll('#tagPicks .tag-pick').forEach((el) => {
+    if (tags.indexOf(el.dataset.tag) >= 0) el.classList.add('on');
+  });
+  qrBase64 = '';
+  document.getElementById('groupPreview').style.display = 'none';
+  document.getElementById('pubErr').innerText = '';
+  document.getElementById('pasteArea').value = '';
+  document.getElementById('pubModal').style.display = 'flex';
+}
 function openProfile(){
   if(!user)return openAuth();
   document.getElementById('profileName').value = user.user_metadata?.username || '';
@@ -818,7 +855,7 @@ function render(){
       <div class="card-bottom">
         <span class="need">${need>0?'还缺 '+need+' 人':'已满'}</span>
         ${minePage&&mine?`
-          <button class="btn-o" onclick="editCount(${c.id})">改人数</button>
+          <button class="btn-o" onclick="openEdit(${c.id})">编辑</button>
           <button class="btn-o" onclick="del(${c.id})">解散</button>
         `:''}
         ${minePage&&joined&&!mine?`<button class="btn-o" onclick="leave(${c.id})">下车</button>`:''}
@@ -1029,7 +1066,7 @@ async function publishCar(){
   if(!(total>=1)){say('总需人数要大于 0');return}
   if(!(cur>=1) || cur>total){say('当前已有要大于 0，且不能大于总人数');return}
   if(!selectedTags().length){say('请选择分类');return}
-  if(cur>=total){say('这辆车已经满了，发到广场后别人看不到。请把「当前已有」改得比总人数少。');return}
+  if(!editingId && cur>=total){say('这辆车已经满了，发到广场后别人看不到。请把「当前已有」改得比总人数少。');return}
   const un = user.user_metadata?.username || user.email?.split('@')[0] || '玩家';
   const payload = {
     script_name: name,
@@ -1049,17 +1086,19 @@ async function publishCar(){
   const btn = document.getElementById('pubBtn');
   if(btn.disabled) return;
   btn.disabled = true;
-  btn.innerText = '发布中…';
-  showToast('正在发布…');
+  btn.innerText = editingId ? '保存中…' : '发布中…';
+  showToast(editingId ? '正在保存…' : '正在发布…');
   let error;
   try {
-    const res = await withTimeout(db.rpc('create_carpool', { p: payload }), 15000);
+    const res = editingId
+      ? await withTimeout(db.rpc('update_carpool', { p_id: editingId, p: payload }), 15000)
+      : await withTimeout(db.rpc('create_carpool', { p: payload }), 15000);
     error = res.error;
   } catch (err) {
     error = err;
   }
   btn.disabled = false;
-  btn.innerText = '立即发布至广场';
+  btn.innerText = editingId ? '保存修改' : '立即发布至广场';
   hideToast();
   if(error){say(friendlyError(error));return}
   setMyWx(wx);
@@ -1068,11 +1107,14 @@ async function publishCar(){
   document.getElementById('pubForm').reset();
   clearTags();
   document.getElementById('groupPreview').style.display = 'none';
+  const wasEdit = !!editingId;
   closePub();
-  page = 'square';
-  go('square');
-  showList();
-  customAlert('已发布到广场');
+  if(!wasEdit){
+    page = 'square';
+    go('square');
+    showList();
+  }
+  customAlert(wasEdit ? '已保存' : '已发布到广场');
   load();
 }
 document.getElementById('pubForm').onsubmit=e=>{e.preventDefault();publishCar()};
